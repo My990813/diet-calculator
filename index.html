@@ -396,26 +396,34 @@ function calculate() {
 }
 
 // ========== TD(0) 时序差分配餐核心函数 ==========
+// 单种食物占该餐热量上限（防一顿全是鸡胸）
+const MAX_SINGLE_FOOD_RATIO = 0.40;
+
 function solveMealTD(foodList, calGoal, proGoal, fatGoal, mealName) {
   // 状态价值表 key:剩余热量_剩余蛋白
   const V = new Map();
   let bestPlan = null;
   let bestScore = -Infinity;
+  const maxSingleCal = Math.round(calGoal * MAX_SINGLE_FOOD_RATIO);
 
   // 多次Episode迭代TD更新
   for (let ep = 0; ep < TD_EPISODES; ep++) {
     let remCal = calGoal;
     let remPro = proGoal;
     const plan = [];
+    const usedIds = new Set();
 
-    while (remCal > 10 && plan.length < foodList.length) {
+    while (remCal > 10 && usedIds.size < foodList.length) {
       // 当前状态
       const stateKey = `${Math.round(remCal)}_${Math.round(remPro)}`;
       if (!V.has(stateKey)) V.set(stateKey, 0);
 
+      // 只从还没用过的食物里选
+      let foodCandidates = foodList.filter(f => !usedIds.has(f.id));
+      if (foodCandidates.length === 0) break;
+
       // 随机探索 + 贪心利用
       const explore = Math.random() < 0.12;
-      let foodCandidates = [...foodList];
       if (!explore) {
         // 按蛋白密度贪心
         foodCandidates.sort((a,b)=>(b.pro/b.cal)-(a.pro/a.cal));
@@ -424,17 +432,18 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, mealName) {
       }
       const food = foodCandidates[0];
 
-      // 计算分量
+      // 计算分量，并加上单种食物热量上限约束
       let qty;
+      const maxQtyByRatio = Math.floor(maxSingleCal / food.cal);
       if (food.unit === '个' || food.unit === 'ml') {
         const byPro = food.pro>0 ? Math.ceil(remPro*0.4/food.pro):1;
         const byCal = Math.floor(remCal*0.45/food.cal);
-        qty = Math.max(food.min, Math.min(food.max, byPro, byCal));
+        qty = Math.max(food.min, Math.min(food.max, byPro, byCal, maxQtyByRatio));
         qty = Math.round(qty);
       } else {
         const byPro = food.pro>0 ? Math.ceil(remPro*0.4/food.pro):50;
         const byCal = Math.floor(remCal*0.5/food.cal);
-        qty = Math.max(food.min, Math.min(food.max, byPro, byCal,250));
+        qty = Math.max(food.min, Math.min(food.max, byPro, byCal, maxQtyByRatio, 250));
         qty = Math.round(qty/5)*5;
       }
       if(qty<=0) break;
@@ -462,7 +471,7 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, mealName) {
       const tdErr = reward + TD_GAMMA * V.get(nextKey) - V.get(stateKey);
       V.set(stateKey, V.get(stateKey) + TD_ALPHA * tdErr);
 
-      // 加入餐单
+      // 加入餐单，标记已使用
       plan.push({
         ...food,
         qty,
@@ -471,14 +480,16 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, mealName) {
         itemFat:+addFat.toFixed(1),
         itemCarb:+(food.carb*qty).toFixed(1)
       });
+      usedIds.add(food.id);
       remCal = nextCal;
       remPro = nextPro;
     }
 
-    // 本轮总分
+    // 本轮总分（加入多样性奖励：品种越多分越高）
     const totalC = plan.reduce((s,i)=>s+i.itemCal,0);
     const totalP = plan.reduce((s,i)=>s+i.itemPro,0);
-    const score = - (Math.abs(totalC-calGoal)*0.8 + Math.abs(totalP-proGoal)*2);
+    const diversity = usedIds.size; // 用了多少种食物
+    const score = - (Math.abs(totalC-calGoal)*0.8 + Math.abs(totalP-proGoal)*2) + diversity * 2;
 
     if(score>bestScore){
       bestScore = score;
