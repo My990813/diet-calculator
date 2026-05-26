@@ -262,6 +262,11 @@ let macroChartInst = null;
 let mealChartInst = null;
 let activeTab = 'b';
 
+// TD超参数
+const TD_ALPHA = 0.1;    // 学习率
+const TD_GAMMA = 0.9;    // 折扣因子
+const TD_EPISODES = 80; // 迭代轮数
+
 const PRESETS = {
   b: {
     light:  ['egg','milk','oat','banana','yogurt','avocado'],
@@ -299,6 +304,7 @@ function switchTab(t) {
 function buildFoodGrids() {
   ['b','l','d'].forEach(meal => {
     const grid = document.getElementById('food-grid-' + meal);
+    grid.innerHTML = '';
     FOODS.forEach(f => {
       const div = document.createElement('div');
       div.className = 'food-chip';
@@ -380,7 +386,7 @@ function calculate() {
     tipEl.innerHTML = '增肌模式：目标热量 = TDEE × 110%（每日盈余约 ' + (targetCal - tdee) + ' kcal），配合力量训练可促进肌肉合成。';
   }
 
-  const meals = solveMeals(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratioStr);
+  const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratioStr);
   renderMeals(meals);
   renderCharts(meals, targetCal, targetPro, targetFat, targetCarb);
   renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, wt);
@@ -389,47 +395,107 @@ function calculate() {
   document.getElementById('result-area').scrollIntoView({behavior:'smooth'});
 }
 
-function solveMeal(foods, calTarget, proTarget, fatTarget, mealName) {
-  const plan = [];
-  let remCal = calTarget;
-  let remPro = proTarget;
+// ========== TD(0) 时序差分配餐核心函数 ==========
+function solveMealTD(foodList, calGoal, proGoal, fatGoal, mealName) {
+  // 状态价值表 key:剩余热量_剩余蛋白
+  const V = new Map();
+  let bestPlan = null;
+  let bestScore = -Infinity;
 
-  const sorted = [...foods].sort((a, b) => (b.pro / b.cal) - (a.pro / a.cal));
+  // 多次Episode迭代TD更新
+  for (let ep = 0; ep < TD_EPISODES; ep++) {
+    let remCal = calGoal;
+    let remPro = proGoal;
+    const plan = [];
 
-  for (const f of sorted) {
-    if (remCal <= 10) break;
-    let qty;
-    if (f.unit === '个' || f.unit === 'ml') {
-      const byPro = f.pro > 0 ? Math.ceil(remPro * 0.4 / f.pro) : 1;
-      const byCal = Math.floor(remCal * 0.45 / f.cal);
-      qty = Math.max(f.min, Math.min(f.max, byPro, byCal));
-      qty = Math.round(qty);
-    } else {
-      const byPro = f.pro > 0 ? Math.ceil(remPro * 0.4 / f.pro) : 50;
-      const byCal = Math.floor(remCal * 0.5 / f.cal);
-      qty = Math.max(f.min, Math.min(f.max, byPro, byCal, 250));
-      qty = Math.round(qty / 5) * 5;
+    while (remCal > 10 && plan.length < foodList.length) {
+      // 当前状态
+      const stateKey = `${Math.round(remCal)}_${Math.round(remPro)}`;
+      if (!V.has(stateKey)) V.set(stateKey, 0);
+
+      // 随机探索 + 贪心利用
+      const explore = Math.random() < 0.12;
+      let foodCandidates = [...foodList];
+      if (!explore) {
+        // 按蛋白密度贪心
+        foodCandidates.sort((a,b)=>(b.pro/b.cal)-(a.pro/a.cal));
+      } else {
+        foodCandidates.sort(()=>Math.random()-0.5);
+      }
+      const food = foodCandidates[0];
+
+      // 计算分量
+      let qty;
+      if (food.unit === '个' || food.unit === 'ml') {
+        const byPro = food.pro>0 ? Math.ceil(remPro*0.4/food.pro):1;
+        const byCal = Math.floor(remCal*0.45/food.cal);
+        qty = Math.max(food.min, Math.min(food.max, byPro, byCal));
+        qty = Math.round(qty);
+      } else {
+        const byPro = food.pro>0 ? Math.ceil(remPro*0.4/food.pro):50;
+        const byCal = Math.floor(remCal*0.5/food.cal);
+        qty = Math.max(food.min, Math.min(food.max, byPro, byCal,250));
+        qty = Math.round(qty/5)*5;
+      }
+      if(qty<=0) break;
+
+      const addCal = food.cal * qty;
+      const addPro = food.pro * qty;
+      const addFat = food.fat * qty;
+
+      // 下一状态
+      const nextCal = remCal - addCal;
+      const nextPro = remPro - addPro;
+      const nextKey = `${Math.round(nextCal)}_${Math.round(nextPro)}`;
+      if(!V.has(nextKey)) V.set(nextKey,0);
+
+      // 奖励函数
+      let reward = 0;
+      // 靠近目标奖励
+      reward -= Math.abs(nextCal - calGoal*0.05)/10;
+      reward -= Math.abs(nextPro - proGoal*0.05)/2;
+      // 超标大额惩罚
+      if(nextCal < 0) reward -= 30;
+      if(nextPro < 0) reward -= 25;
+
+      // TD(0) 更新价值
+      const tdErr = reward + TD_GAMMA * V.get(nextKey) - V.get(stateKey);
+      V.set(stateKey, V.get(stateKey) + TD_ALPHA * tdErr);
+
+      // 加入餐单
+      plan.push({
+        ...food,
+        qty,
+        itemCal:Math.round(addCal),
+        itemPro:+addPro.toFixed(1),
+        itemFat:+addFat.toFixed(1),
+        itemCarb:+(food.carb*qty).toFixed(1)
+      });
+      remCal = nextCal;
+      remPro = nextPro;
     }
-    if (qty <= 0) continue;
-    const itemCal = Math.round(f.cal * qty);
-    const itemPro = +(f.pro * qty).toFixed(1);
-    const itemFat = +(f.fat * qty).toFixed(1);
-    const itemCarb = +(f.carb * qty).toFixed(1);
-    plan.push({...f, qty, itemCal, itemPro, itemFat, itemCarb});
-    remCal -= itemCal;
-    remPro -= itemPro;
+
+    // 本轮总分
+    const totalC = plan.reduce((s,i)=>s+i.itemCal,0);
+    const totalP = plan.reduce((s,i)=>s+i.itemPro,0);
+    const score = - (Math.abs(totalC-calGoal)*0.8 + Math.abs(totalP-proGoal)*2);
+
+    if(score>bestScore){
+      bestScore = score;
+      bestPlan = plan;
+    }
   }
 
-  const totalCal = plan.reduce((s,i) => s + i.itemCal, 0);
-  const totalPro = +plan.reduce((s,i) => s + i.itemPro, 0).toFixed(1);
-  const totalFat = +plan.reduce((s,i) => s + i.itemFat, 0).toFixed(1);
-  const totalCarb = +plan.reduce((s,i) => s + i.itemCarb, 0).toFixed(1);
-  const totalFiber = +plan.reduce((s,i) => s + (i.fiber||0) * i.qty, 0).toFixed(1);
+  const totalCal = bestPlan.reduce((s,i)=>s+i.itemCal,0);
+  const totalPro = +bestPlan.reduce((s,i)=>s+i.itemPro,0).toFixed(1);
+  const totalFat = +bestPlan.reduce((s,i)=>s+i.itemFat,0).toFixed(1);
+  const totalCarb = +bestPlan.reduce((s,i)=>s+i.itemCarb,0).toFixed(1);
+  const totalFiber = +bestPlan.reduce((s,i)=>s+(i.fiber||0)*i.qty,0).toFixed(1);
 
-  return {name: mealName, items: plan, totalCal, totalPro, totalFat, totalCarb, totalFiber};
+  return {name:mealName, items:bestPlan, totalCal,totalPro,totalFat,totalCarb,totalFiber};
 }
 
-function solveMeals(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratios) {
+function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratios) {
   const bCal = Math.round(targetCal * ratios[0]);
   const lCal = Math.round(targetCal * ratios[1]);
   const dCal = targetCal - bCal - lCal;
@@ -437,9 +503,9 @@ function solveMeals(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, rat
   const lPro = Math.round(targetPro * ratios[1]);
   const dPro = targetPro - bPro - lPro;
 
-  const breakfast = solveMeal(bFoods, bCal, bPro, targetFat * ratios[0], '早餐');
-  const lunch     = solveMeal(lFoods, lCal, lPro, targetFat * ratios[1], '午餐');
-  const dinner    = solveMeal(dFoods, dCal, dPro, targetFat * ratios[2], '晚餐');
+  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], '早餐');
+  const lunch     = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], '午餐');
+  const dinner    = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], '晚餐');
   return [breakfast, lunch, dinner];
 }
 
