@@ -263,11 +263,6 @@ let macroChartInst = null;
 let mealChartInst = null;
 let activeTab = 'b';
 
-// TD超参数
-const TD_ALPHA = 0.1;    // 学习率
-const TD_GAMMA = 0.9;    // 折扣因子
-const TD_EPISODES = 80; // 迭代轮数
-
 const PRESETS = {
   b: {
     light:  ['egg','milk','oat','banana','yogurt','avocado'],
@@ -396,127 +391,143 @@ function calculate() {
   document.getElementById('result-area').scrollIntoView({behavior:'smooth'});
 }
 
-// ========== TD(0) 时序差分配餐核心函数 ==========
-const MAX_SINGLE_FOOD_RATIO = 0.40; // 单种食物占该餐热量上限
-const MAX_SAME_CAT = 2;            // 同类食物最多出现次数（防一堆蛋白源/一堆奶制品）
-const CAT_DIVERSITY_BONUS = 3;     // 不同类别奖励分
+// ========== 随机组合 + 分量优化配餐核心函数 ==========
+// 核心理念：不再逐次贪心选食物（TD），而是每次随机抽一组食物整体评估，500次取最优
+const MC_SAMPLES = 500;              // 随机采样次数
+const MAX_SINGLE_FOOD_RATIO = 0.40;  // 单种食物占该餐热量上限
+const MIN_MEAL_FOODS = 3;            // 最少食物种类
+const MAX_MEAL_FOODS = 7;            // 最多食物种类
+
+function clampQty(food, rawQty, maxSingleCal) {
+  // 统一的份量裁剪：在 min~max 之间，且不超过单种热量上限
+  const maxByCal = Math.floor(maxSingleCal / food.cal);
+  let qty = rawQty;
+  if (food.unit === '个' || food.unit === 'ml') {
+    qty = Math.round(qty);
+    qty = Math.max(food.min || 0, Math.min(food.max, qty, maxByCal));
+  } else {
+    qty = Math.round(qty / 5) * 5;
+    qty = Math.max(food.min || 0, Math.min(food.max, qty, maxByCal, 200));
+  }
+  return Math.max(0, qty);
+}
 
 function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
-  // 状态价值表 key:剩余热量_剩余蛋白_剩余碳水
-  const V = new Map();
+  if (foodList.length < MIN_MEAL_FOODS) {
+    // fallback: 食物太少，直接全用
+    foodList = [...foodList];
+  }
+
   let bestPlan = null;
   let bestScore = -Infinity;
   const maxSingleCal = Math.round(calGoal * MAX_SINGLE_FOOD_RATIO);
 
-  for (let ep = 0; ep < TD_EPISODES; ep++) {
-    let remCal = calGoal;
-    let remPro = proGoal;
-    let remCarb = carbGoal;
-    const plan = [];
-    const usedIds = new Set();
-    const catCount = {}; // 同类计数器
+  for (let trial = 0; trial < MC_SAMPLES; trial++) {
+    // === Step 1: 随机抽取 k 种食物（k = 3~7，越多样化越好） ===
+    const k = MIN_MEAL_FOODS + Math.floor(Math.random() * (MAX_MEAL_FOODS - MIN_MEAL_FOODS + 1));
+    const shuffled = [...foodList].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, Math.min(k, shuffled.length));
 
-    while (remCal > 10 && usedIds.size < foodList.length) {
-      const stateKey = `${Math.round(remCal)}_${Math.round(remPro)}_${Math.round(remCarb)}`;
-      if (!V.has(stateKey)) V.set(stateKey, 0);
-
-      // 只从没用过且未超同类上限的食物里选
-      let foodCandidates = foodList.filter(f => {
-        if (usedIds.has(f.id)) return false;
-        return (catCount[f.cat] || 0) < MAX_SAME_CAT;
-      });
-      if (foodCandidates.length === 0) break;
-
-      // 综合评分选食物（不是纯蛋白密度！）
-      const explore = Math.random() < 0.12;
-      if (!explore) {
-        // 当前需求权重：蛋白质缺口 vs 碳水缺口
-        const proNeedWeight = Math.max(0.1, remPro / Math.max(1, proGoal));
-        const carbNeedWeight = Math.max(0.1, remCarb / Math.max(1, carbGoal));
-        const totalWeight = proNeedWeight + carbNeedWeight;
-
-        foodCandidates.sort((a, b) => {
-          // 综合评分 = 蛋白密度×蛋白需求 + 碳水密度×碳水需求 - 同类惩罚
-          const scoreA = (a.pro / Math.max(0.01, a.cal)) * (proNeedWeight / totalWeight)
-                       + (a.carb / Math.max(0.01, a.cal)) * (carbNeedWeight / totalWeight)
-                       - (catCount[a.cat] || 0) * 0.8;
-          const scoreB = (b.pro / Math.max(0.01, b.cal)) * (proNeedWeight / totalWeight)
-                       + (b.carb / Math.max(0.01, b.cal)) * (carbNeedWeight / totalWeight)
-                       - (catCount[b.cat] || 0) * 0.8;
-          return scoreB - scoreA;
-        });
-      } else {
-        foodCandidates.sort(() => Math.random() - 0.5);
+    // 强制确保有 蛋白源 + 碳水源 + 蔬菜（如果可选食物里有的话）
+    const availCats = new Set(selected.map(f => f.cat));
+    const mandatoryCats = ['protein', 'carb', 'veggie'].filter(c => foodList.some(f => f.cat === c));
+    const missingCats = mandatoryCats.filter(c => !availCats.has(c));
+    for (const missingCat of missingCats) {
+      const candidates = foodList.filter(f => f.cat === missingCat && !selected.some(s => s.id === f.id));
+      if (candidates.length > 0) {
+        const pick = candidates[Math.floor(Math.random() * candidates.length)];
+        // 替换掉一个同类的（如果有），否则替换最后一个
+        const sameCatIdx = selected.findIndex(f => f.cat === missingCat);
+        if (sameCatIdx >= 0) {
+          selected[sameCatIdx] = pick;
+        } else if (selected.length < MAX_MEAL_FOODS) {
+          selected.push(pick);
+        } else {
+          selected[selected.length - 1] = pick;
+        }
       }
-      const food = foodCandidates[0];
-
-      // 计算分量
-      let qty;
-      const maxQtyByRatio = Math.floor(maxSingleCal / food.cal);
-      if (food.unit === '个' || food.unit === 'ml') {
-        const byPro = food.pro > 0 ? Math.ceil(remPro * 0.4 / food.pro) : 1;
-        const byCal = Math.floor(remCal * 0.45 / food.cal);
-        qty = Math.max(food.min, Math.min(food.max, byPro, byCal, maxQtyByRatio));
-        qty = Math.round(qty);
-      } else {
-        const byPro = food.pro > 0 ? Math.ceil(remPro * 0.4 / food.pro) : 50;
-        const byCal = Math.floor(remCal * 0.5 / food.cal);
-        qty = Math.max(food.min, Math.min(food.max, byPro, byCal, maxQtyByRatio, 200));
-        qty = Math.round(qty / 5) * 5;
-      }
-      if (qty <= 0) break;
-
-      const addCal = food.cal * qty;
-      const addPro = food.pro * qty;
-      const addCarb = food.carb * qty;
-
-      const nextCal = remCal - addCal;
-      const nextPro = remPro - addPro;
-      const nextCarb = remCarb - addCarb;
-      const nextKey = `${Math.round(nextCal)}_${Math.round(nextPro)}_${Math.round(nextCarb)}`;
-      if (!V.has(nextKey)) V.set(nextKey, 0);
-
-      // 奖励函数（加入碳水维度）
-      let reward = 0;
-      reward -= Math.abs(nextCal - calGoal * 0.05) / 10;
-      reward -= Math.abs(nextPro - proGoal * 0.05) / 2;
-      reward -= Math.abs(nextCarb - carbGoal * 0.05) / 3;
-      if (nextCal < 0) reward -= 30;
-      if (nextPro < 0) reward -= 25;
-      if (nextCarb < 0) reward -= 15;
-
-      // TD(0) 更新
-      const tdErr = reward + TD_GAMMA * V.get(nextKey) - V.get(stateKey);
-      V.set(stateKey, V.get(stateKey) + TD_ALPHA * tdErr);
-
-      plan.push({
-        ...food,
-        qty,
-        itemCal: Math.round(addCal),
-        itemPro: +addPro.toFixed(1),
-        itemFat: +(food.fat * qty).toFixed(1),
-        itemCarb: +addCarb.toFixed(1)
-      });
-      usedIds.add(food.id);
-      catCount[food.cat] = (catCount[food.cat] || 0) + 1;
-      remCal = nextCal;
-      remPro = nextPro;
-      remCarb = nextCarb;
     }
 
-    // 本轮总分（加入碳水偏差 + 类别多样性）
-    const totalC = plan.reduce((s, i) => s + i.itemCal, 0);
-    const totalP = plan.reduce((s, i) => s + i.itemPro, 0);
-    const totalCarb = plan.reduce((s, i) => s + i.itemCarb, 0);
-    const uniqueCats = new Set(plan.map(i => i.cat)).size;
-    const score = -(Math.abs(totalC - calGoal) * 0.8
-                  + Math.abs(totalP - proGoal) * 2
-                  + Math.abs(totalCarb - carbGoal) * 1.5)
-                  + uniqueCats * CAT_DIVERSITY_BONUS;
+    // === Step 2: 初始分量分配（按热量等分） ===
+    let plan = selected.map(f => {
+      const share = calGoal / selected.length;
+      const rawQty = share / f.cal;
+      return { food: f, rawQty: Math.max(1, rawQty) };
+    });
+
+    // === Step 3: 迭代调整分量，逼近宏量目标 ===
+    // 做 3 轮微调：按蛋白和碳水的缺口，加减各食物的分量
+    for (let adj = 0; adj < 3; adj++) {
+      let curCal = 0, curPro = 0, curCarb = 0;
+      const clampedPlan = plan.map(p => {
+        const qty = clampQty(p.food, p.rawQty, maxSingleCal);
+        curCal += p.food.cal * qty;
+        curPro += p.food.pro * qty;
+        curCarb += p.food.carb * qty;
+        return { ...p, qty };
+      });
+
+      if (curCal === 0) break;
+
+      // 计算缩放因子：同时考虑热量、蛋白、碳水
+      const calScale = calGoal / Math.max(1, curCal);
+      const proBias = proGoal > 0 ? (proGoal - curPro) / Math.max(1, proGoal) : 0;
+      const carbBias = carbGoal > 0 ? (carbGoal - curCarb) / Math.max(1, carbGoal) : 0;
+
+      plan = selected.map((f, i) => {
+        const oldQty = clampedPlan[i].qty;
+        // 蛋白缺口时给蛋白源加分量，碳水缺口时给碳水源加分量
+        let bias = calScale;
+        if (proBias > 0 && f.cat === 'protein') bias += proBias * 0.15;
+        if (proBias < 0 && f.cat === 'protein') bias -= Math.abs(proBias) * 0.1;
+        if (carbBias > 0 && f.cat === 'carb') bias += carbBias * 0.15;
+        if (carbBias < 0 && f.cat === 'carb') bias -= Math.abs(carbBias) * 0.1;
+        return { food: f, rawQty: oldQty * Math.max(0.5, Math.min(1.5, bias)) };
+      });
+    }
+
+    // === Step 4: 最终裁剪 ===
+    const finalPlan = plan.map(p => {
+      const qty = clampQty(p.food, p.rawQty, maxSingleCal);
+      return {
+        ...p.food,
+        qty,
+        itemCal: Math.round(p.food.cal * qty),
+        itemPro: +(p.food.pro * qty).toFixed(1),
+        itemFat: +(p.food.fat * qty).toFixed(1),
+        itemCarb: +(p.food.carb * qty).toFixed(1)
+      };
+    }).filter(p => p.qty > 0);
+
+    if (finalPlan.length < 2) continue;
+
+    // === Step 5: 综合评分 ===
+    const totalC = finalPlan.reduce((s, i) => s + i.itemCal, 0);
+    const totalP = finalPlan.reduce((s, i) => s + i.itemPro, 0);
+    const totalCarb = finalPlan.reduce((s, i) => s + i.itemCarb, 0);
+    const cats = new Set(finalPlan.map(i => i.cat));
+    const hasProtein = cats.has('protein');
+    const hasCarb = cats.has('carb');
+    const hasVeggie = cats.has('veggie');
+
+    // 核心：缺蛋白质/碳水源/蔬菜 → 大幅扣分
+    const mandatoryBonus = (hasProtein ? 15 : -50) + (hasCarb ? 15 : -50) + (hasVeggie ? 10 : -30);
+
+    // 同类超过1个 → 扣分（比之前强得多）
+    const catCounts = {};
+    finalPlan.forEach(i => { catCounts[i.cat] = (catCounts[i.cat] || 0) + 1; });
+    const sameCatPenalty = Object.values(catCounts).reduce((s, c) => s + (c > 1 ? (c - 1) * 8 : 0), 0);
+
+    const score = mandatoryBonus
+                - Math.abs(totalC - calGoal) * 1.2
+                - Math.abs(totalP - proGoal) * 3
+                - Math.abs(totalCarb - carbGoal) * 2
+                - sameCatPenalty
+                + cats.size * 5;
 
     if (score > bestScore) {
       bestScore = score;
-      bestPlan = plan;
+      bestPlan = finalPlan;
     }
   }
 
