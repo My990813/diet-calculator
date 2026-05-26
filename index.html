@@ -231,29 +231,30 @@ input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
 </div>
 
 <script>
+// cat: 'protein' 蛋白源 | 'carb' 碳水源 | 'mixed' 混合 | 'veggie' 蔬菜 | 'dairy' 奶制品 | 'fat' 脂肪源 | 'treat' 高热量零食
 const FOODS = [
-  {id:"egg",    name:"鸡蛋",     icon:"🥚", unit:"个",  cal:70,   pro:6,    fat:5,   carb:0.6, fiber:0, min:0, max:3},
-  {id:"milk",   name:"牛奶",     icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0, min:0, max:400},
-  {id:"rice",   name:"白米饭",   icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,min:0,max:400},
-  {id:"noodle", name:"面条",     icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01,min:0,max:300},
-  {id:"dumplin",name:"饺子",     icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5,min:0,max:10},
-  {id:"chicken",name:"鸡胸肉",   icon:"🍗", unit:"g",   cal:1.65, pro:0.23, fat:0.035,carb:0,   fiber:0,min:0,max:300},
-  {id:"beef",   name:"牛肉片",   icon:"🥩", unit:"g",   cal:2.5,  pro:0.21, fat:0.15, carb:0,   fiber:0,min:0,max:200},
-  {id:"tofu",   name:"豆腐",     icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,min:0,max:300},
-  {id:"broc",   name:"西兰花",   icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,min:0,max:300},
-  {id:"spinach",name:"菠菜",     icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,min:0,max:200},
-  {id:"tomato", name:"西红柿",   icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,min:0,max:200},
-  {id:"banana", name:"香蕉",     icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,min:0,max:200},
-  {id:"sweet",  name:"红薯",     icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, min:0,max:300},
-  {id:"avocado",name:"牛油果",   icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,min:0,max:150},
-  {id:"oat",    name:"燕麦片",   icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,min:0,max:100},
-  {id:"salmon", name:"三文鱼",   icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,min:0,max:200},
-  {id:"shrimp", name:"虾仁",     icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,min:0,max:200},
-  {id:"yogurt", name:"希腊酸奶", icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,min:0,max:250},
-  {id:"baozi",  name:"肉包子",   icon:"🥮", unit:"个",  cal:190,  pro:7,    fat:8,   carb:24,  fiber:0.8, min:0, max:3},
-  {id:"stirfry",name:"炒菜",     icon:"🥘", unit:"g",   cal:0.9,  pro:0.06, fat:0.05, carb:0.08, fiber:0.015,min:0,max:300},
-  {id:"dessert",name:"甜品",     icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,min:0,max:100},
-  {id:"bbq",    name:"烧烤",     icon:"🍖", unit:"g",   cal:2.1,  pro:0.19, fat:0.14, carb:0.01, fiber:0,min:0,max:250},
+  {id:"egg",    name:"鸡蛋",     icon:"🥚", unit:"个",  cal:70,   pro:6,    fat:5,   carb:0.6, fiber:0, min:0, max:3,   cat:"protein"},
+  {id:"milk",   name:"牛奶",     icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0, min:0, max:400, cat:"dairy"},
+  {id:"rice",   name:"白米饭",   icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,min:0,max:400, cat:"carb"},
+  {id:"noodle", name:"面条",     icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01,min:0,max:300, cat:"carb"},
+  {id:"dumplin",name:"饺子",     icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5,min:0,max:10,  cat:"mixed"},
+  {id:"chicken",name:"鸡胸肉",   icon:"🍗", unit:"g",   cal:1.65, pro:0.23, fat:0.035,carb:0,   fiber:0,min:0,max:300, cat:"protein"},
+  {id:"beef",   name:"牛肉片",   icon:"🥩", unit:"g",   cal:2.5,  pro:0.21, fat:0.15, carb:0,   fiber:0,min:0,max:200, cat:"protein"},
+  {id:"tofu",   name:"豆腐",     icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,min:0,max:300, cat:"protein"},
+  {id:"broc",   name:"西兰花",   icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,min:0,max:300, cat:"veggie"},
+  {id:"spinach",name:"菠菜",     icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,min:0,max:200, cat:"veggie"},
+  {id:"tomato", name:"西红柿",   icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,min:0,max:200, cat:"veggie"},
+  {id:"banana", name:"香蕉",     icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,min:0,max:200, cat:"carb"},
+  {id:"sweet",  name:"红薯",     icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, min:0,max:300, cat:"carb"},
+  {id:"avocado",name:"牛油果",   icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,min:0,max:150, cat:"fat"},
+  {id:"oat",    name:"燕麦片",   icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,min:0,max:100, cat:"carb"},
+  {id:"salmon", name:"三文鱼",   icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,min:0,max:200, cat:"protein"},
+  {id:"shrimp", name:"虾仁",     icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,min:0,max:200, cat:"protein"},
+  {id:"yogurt", name:"希腊酸奶", icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,min:0,max:250, cat:"dairy"},
+  {id:"baozi",  name:"肉包子",   icon:"🥮", unit:"个",  cal:190,  pro:7,    fat:8,   carb:24,  fiber:0.8, min:0, max:3,   cat:"mixed"},
+  {id:"stirfry",name:"炒菜",     icon:"🥘", unit:"g",   cal:0.9,  pro:0.06, fat:0.05, carb:0.08, fiber:0.015,min:0,max:300, cat:"mixed"},
+  {id:"dessert",name:"甜品",     icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,min:0,max:100, cat:"treat"},
+  {id:"bbq",    name:"烧烤",     icon:"🍖", unit:"g",   cal:2.1,  pro:0.19, fat:0.14, carb:0.01, fiber:0,min:0,max:250, cat:"protein"},
 ];
 
 let gender = 'male';
@@ -386,7 +387,7 @@ function calculate() {
     tipEl.innerHTML = '增肌模式：目标热量 = TDEE × 110%（每日盈余约 ' + (targetCal - tdee) + ' kcal），配合力量训练可促进肌肉合成。';
   }
 
-  const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratioStr);
+  const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, ratioStr);
   renderMeals(meals);
   renderCharts(meals, targetCal, targetPro, targetFat, targetCarb);
   renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, wt);
@@ -396,127 +397,152 @@ function calculate() {
 }
 
 // ========== TD(0) 时序差分配餐核心函数 ==========
-// 单种食物占该餐热量上限（防一顿全是鸡胸）
-const MAX_SINGLE_FOOD_RATIO = 0.40;
+const MAX_SINGLE_FOOD_RATIO = 0.40; // 单种食物占该餐热量上限
+const MAX_SAME_CAT = 2;            // 同类食物最多出现次数（防一堆蛋白源/一堆奶制品）
+const CAT_DIVERSITY_BONUS = 3;     // 不同类别奖励分
 
-function solveMealTD(foodList, calGoal, proGoal, fatGoal, mealName) {
-  // 状态价值表 key:剩余热量_剩余蛋白
+function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
+  // 状态价值表 key:剩余热量_剩余蛋白_剩余碳水
   const V = new Map();
   let bestPlan = null;
   let bestScore = -Infinity;
   const maxSingleCal = Math.round(calGoal * MAX_SINGLE_FOOD_RATIO);
 
-  // 多次Episode迭代TD更新
   for (let ep = 0; ep < TD_EPISODES; ep++) {
     let remCal = calGoal;
     let remPro = proGoal;
+    let remCarb = carbGoal;
     const plan = [];
     const usedIds = new Set();
+    const catCount = {}; // 同类计数器
 
     while (remCal > 10 && usedIds.size < foodList.length) {
-      // 当前状态
-      const stateKey = `${Math.round(remCal)}_${Math.round(remPro)}`;
+      const stateKey = `${Math.round(remCal)}_${Math.round(remPro)}_${Math.round(remCarb)}`;
       if (!V.has(stateKey)) V.set(stateKey, 0);
 
-      // 只从还没用过的食物里选
-      let foodCandidates = foodList.filter(f => !usedIds.has(f.id));
+      // 只从没用过且未超同类上限的食物里选
+      let foodCandidates = foodList.filter(f => {
+        if (usedIds.has(f.id)) return false;
+        return (catCount[f.cat] || 0) < MAX_SAME_CAT;
+      });
       if (foodCandidates.length === 0) break;
 
-      // 随机探索 + 贪心利用
+      // 综合评分选食物（不是纯蛋白密度！）
       const explore = Math.random() < 0.12;
       if (!explore) {
-        // 按蛋白密度贪心
-        foodCandidates.sort((a,b)=>(b.pro/b.cal)-(a.pro/a.cal));
+        // 当前需求权重：蛋白质缺口 vs 碳水缺口
+        const proNeedWeight = Math.max(0.1, remPro / Math.max(1, proGoal));
+        const carbNeedWeight = Math.max(0.1, remCarb / Math.max(1, carbGoal));
+        const totalWeight = proNeedWeight + carbNeedWeight;
+
+        foodCandidates.sort((a, b) => {
+          // 综合评分 = 蛋白密度×蛋白需求 + 碳水密度×碳水需求 - 同类惩罚
+          const scoreA = (a.pro / Math.max(0.01, a.cal)) * (proNeedWeight / totalWeight)
+                       + (a.carb / Math.max(0.01, a.cal)) * (carbNeedWeight / totalWeight)
+                       - (catCount[a.cat] || 0) * 0.8;
+          const scoreB = (b.pro / Math.max(0.01, b.cal)) * (proNeedWeight / totalWeight)
+                       + (b.carb / Math.max(0.01, b.cal)) * (carbNeedWeight / totalWeight)
+                       - (catCount[b.cat] || 0) * 0.8;
+          return scoreB - scoreA;
+        });
       } else {
-        foodCandidates.sort(()=>Math.random()-0.5);
+        foodCandidates.sort(() => Math.random() - 0.5);
       }
       const food = foodCandidates[0];
 
-      // 计算分量，并加上单种食物热量上限约束
+      // 计算分量
       let qty;
       const maxQtyByRatio = Math.floor(maxSingleCal / food.cal);
       if (food.unit === '个' || food.unit === 'ml') {
-        const byPro = food.pro>0 ? Math.ceil(remPro*0.4/food.pro):1;
-        const byCal = Math.floor(remCal*0.45/food.cal);
+        const byPro = food.pro > 0 ? Math.ceil(remPro * 0.4 / food.pro) : 1;
+        const byCal = Math.floor(remCal * 0.45 / food.cal);
         qty = Math.max(food.min, Math.min(food.max, byPro, byCal, maxQtyByRatio));
         qty = Math.round(qty);
       } else {
-        const byPro = food.pro>0 ? Math.ceil(remPro*0.4/food.pro):50;
-        const byCal = Math.floor(remCal*0.5/food.cal);
-        qty = Math.max(food.min, Math.min(food.max, byPro, byCal, maxQtyByRatio, 250));
-        qty = Math.round(qty/5)*5;
+        const byPro = food.pro > 0 ? Math.ceil(remPro * 0.4 / food.pro) : 50;
+        const byCal = Math.floor(remCal * 0.5 / food.cal);
+        qty = Math.max(food.min, Math.min(food.max, byPro, byCal, maxQtyByRatio, 200));
+        qty = Math.round(qty / 5) * 5;
       }
-      if(qty<=0) break;
+      if (qty <= 0) break;
 
       const addCal = food.cal * qty;
       const addPro = food.pro * qty;
-      const addFat = food.fat * qty;
+      const addCarb = food.carb * qty;
 
-      // 下一状态
       const nextCal = remCal - addCal;
       const nextPro = remPro - addPro;
-      const nextKey = `${Math.round(nextCal)}_${Math.round(nextPro)}`;
-      if(!V.has(nextKey)) V.set(nextKey,0);
+      const nextCarb = remCarb - addCarb;
+      const nextKey = `${Math.round(nextCal)}_${Math.round(nextPro)}_${Math.round(nextCarb)}`;
+      if (!V.has(nextKey)) V.set(nextKey, 0);
 
-      // 奖励函数
+      // 奖励函数（加入碳水维度）
       let reward = 0;
-      // 靠近目标奖励
-      reward -= Math.abs(nextCal - calGoal*0.05)/10;
-      reward -= Math.abs(nextPro - proGoal*0.05)/2;
-      // 超标大额惩罚
-      if(nextCal < 0) reward -= 30;
-      if(nextPro < 0) reward -= 25;
+      reward -= Math.abs(nextCal - calGoal * 0.05) / 10;
+      reward -= Math.abs(nextPro - proGoal * 0.05) / 2;
+      reward -= Math.abs(nextCarb - carbGoal * 0.05) / 3;
+      if (nextCal < 0) reward -= 30;
+      if (nextPro < 0) reward -= 25;
+      if (nextCarb < 0) reward -= 15;
 
-      // TD(0) 更新价值
+      // TD(0) 更新
       const tdErr = reward + TD_GAMMA * V.get(nextKey) - V.get(stateKey);
       V.set(stateKey, V.get(stateKey) + TD_ALPHA * tdErr);
 
-      // 加入餐单，标记已使用
       plan.push({
         ...food,
         qty,
-        itemCal:Math.round(addCal),
-        itemPro:+addPro.toFixed(1),
-        itemFat:+addFat.toFixed(1),
-        itemCarb:+(food.carb*qty).toFixed(1)
+        itemCal: Math.round(addCal),
+        itemPro: +addPro.toFixed(1),
+        itemFat: +(food.fat * qty).toFixed(1),
+        itemCarb: +addCarb.toFixed(1)
       });
       usedIds.add(food.id);
+      catCount[food.cat] = (catCount[food.cat] || 0) + 1;
       remCal = nextCal;
       remPro = nextPro;
+      remCarb = nextCarb;
     }
 
-    // 本轮总分（加入多样性奖励：品种越多分越高）
-    const totalC = plan.reduce((s,i)=>s+i.itemCal,0);
-    const totalP = plan.reduce((s,i)=>s+i.itemPro,0);
-    const diversity = usedIds.size; // 用了多少种食物
-    const score = - (Math.abs(totalC-calGoal)*0.8 + Math.abs(totalP-proGoal)*2) + diversity * 2;
+    // 本轮总分（加入碳水偏差 + 类别多样性）
+    const totalC = plan.reduce((s, i) => s + i.itemCal, 0);
+    const totalP = plan.reduce((s, i) => s + i.itemPro, 0);
+    const totalCarb = plan.reduce((s, i) => s + i.itemCarb, 0);
+    const uniqueCats = new Set(plan.map(i => i.cat)).size;
+    const score = -(Math.abs(totalC - calGoal) * 0.8
+                  + Math.abs(totalP - proGoal) * 2
+                  + Math.abs(totalCarb - carbGoal) * 1.5)
+                  + uniqueCats * CAT_DIVERSITY_BONUS;
 
-    if(score>bestScore){
+    if (score > bestScore) {
       bestScore = score;
       bestPlan = plan;
     }
   }
 
-  const totalCal = bestPlan.reduce((s,i)=>s+i.itemCal,0);
-  const totalPro = +bestPlan.reduce((s,i)=>s+i.itemPro,0).toFixed(1);
-  const totalFat = +bestPlan.reduce((s,i)=>s+i.itemFat,0).toFixed(1);
-  const totalCarb = +bestPlan.reduce((s,i)=>s+i.itemCarb,0).toFixed(1);
-  const totalFiber = +bestPlan.reduce((s,i)=>s+(i.fiber||0)*i.qty,0).toFixed(1);
+  const totalCal = bestPlan.reduce((s, i) => s + i.itemCal, 0);
+  const totalPro = +bestPlan.reduce((s, i) => s + i.itemPro, 0).toFixed(1);
+  const totalFat = +bestPlan.reduce((s, i) => s + i.itemFat, 0).toFixed(1);
+  const totalCarb = +bestPlan.reduce((s, i) => s + i.itemCarb, 0).toFixed(1);
+  const totalFiber = +bestPlan.reduce((s, i) => s + (i.fiber || 0) * i.qty, 0).toFixed(1);
 
-  return {name:mealName, items:bestPlan, totalCal,totalPro,totalFat,totalCarb,totalFiber};
+  return { name: mealName, items: bestPlan, totalCal, totalPro, totalFat, totalCarb, totalFiber };
 }
 
-function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratios) {
+function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, ratios) {
   const bCal = Math.round(targetCal * ratios[0]);
   const lCal = Math.round(targetCal * ratios[1]);
   const dCal = targetCal - bCal - lCal;
   const bPro = Math.round(targetPro * ratios[0]);
   const lPro = Math.round(targetPro * ratios[1]);
   const dPro = targetPro - bPro - lPro;
+  const bCarb = Math.round(targetCarb * ratios[0]);
+  const lCarb = Math.round(targetCarb * ratios[1]);
+  const dCarb = targetCarb - bCarb - lCarb;
 
-  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], '早餐');
-  const lunch     = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], '午餐');
-  const dinner    = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], '晚餐');
+  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, '早餐');
+  const lunch     = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, '午餐');
+  const dinner    = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, '晚餐');
   return [breakfast, lunch, dinner];
 }
 
