@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外卖减脂增肌饮食计算器</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#f5f4f0;color:#2c2c2a;font-size:13px;line-height:1.6}
+h1{font-size:15px;font-weight:500}
+h2{font-size:14px;font-weight:500}
+h3{font-size:13px;font-weight:500}
+.page{max-width:860px;margin:0 auto;padding:24px 16px}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:20px 24px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+label{display:block;font-size:12px;color:#5f5e5a;margin-bottom:4px;margin-top:12px}
+label:first-child{margin-top:0}
+input[type=number],select{width:100%;padding:8px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;font-size:13px;background:#fff;color:#2c2c2a;outline:none}
+input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
+.radio-row{display:flex;gap:12px;margin-top:4px}
+.radio-btn{flex:1;padding:8px;border:0.5px solid rgba(0,0,0,0.2);border-radius:8px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px}
+.radio-btn.active-male{background:#e6f1fb;border-color:#378add;color:#185fa5;font-weight:500}
+.radio-btn.active-female{background:#fbeaf0;border-color:#d4537e;color:#993556;font-weight:500}
+.radio-btn.active-cut{background:#eaf3de;border-color:#639922;color:#3b6d11;font-weight:500}
+.radio-btn.active-bulk{background:#faeeda;border-color:#ba7517;color:#854f0b;font-weight:500}
+.btn-calc{width:100%;margin-top:16px;padding:11px;background:#185fa5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
+.btn-calc:hover{background:#0c447c}
+.metric-card{background:#f5f4f0;border-radius:8px;padding:14px 12px;text-align:center}
+.metric-label{font-size:11px;color:#888780;margin-bottom:4px}
+.metric-value{font-size:22px;font-weight:500;color:#2c2c2a}
+.metric-unit{font-size:11px;color:#888780}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;margin-left:6px}
+.tag-cut{background:#eaf3de;color:#3b6d11}
+.tag-bulk{background:#faeeda;color:#854f0b}
+.meal-block{border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.meal-title{font-weight:500;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-b{background:#378add}
+.dot-l{background:#639922}
+.dot-d{background:#d4537e}
+.food-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(0,0,0,0.06)}
+.food-row:last-child{border-bottom:none}
+.food-name{color:#2c2c2a}
+.food-qty{color:#5f5e5a;font-size:12px}
+.food-cal{color:#ba7517;font-size:12px;font-weight:500}
+.warn-box{background:#fcebeb;border:0.5px solid rgba(163,45,45,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#791f1f;margin-top:8px}
+.ok-box{background:#eaf3de;border:0.5px solid rgba(99,153,34,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#27500a;margin-top:8px}
+.hidden{display:none}
+.progress-bar{height:6px;border-radius:3px;background:#e9e8e3;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+.food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:8px}
+.food-chip{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;font-size:12px}
+.food-chip.sel-b{background:#e6f1fb;border-color:#378add;color:#185fa5}
+.food-chip.sel-l{background:#eaf3de;border-color:#639922;color:#3b6d11}
+.food-chip.sel-d{background:#fbeaf0;border-color:#d4537e;color:#993556}
+.food-chip-icon{font-size:14px}
+.section-note{font-size:12px;color:#888780;margin-top:4px}
+.meal-tabs{display:flex;gap:0;margin-bottom:12px;border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;overflow:hidden}
+.meal-tab{flex:1;padding:8px;text-align:center;cursor:pointer;font-size:13px;transition:all .15s;border:none;background:#fff}
+.meal-tab.tab-b.active{background:#e6f1fb;color:#185fa5;font-weight:500}
+.meal-tab.tab-l.active{background:#eaf3de;color:#3b6d11;font-weight:500}
+.meal-tab.tab-d.active{background:#fbeaf0;color:#993556;font-weight:500}
+.meal-panel{display:none}
+.meal-panel.active{display:block}
+.select-all-row{display:flex;gap:8px;margin-top:8px;margin-bottom:2px}
+.btn-sm{padding:4px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:6px;font-size:11px;cursor:pointer;background:#fff;color:#5f5e5a;transition:background .1s}
+.btn-sm:hover{background:#f1efe8}
+.chart-wrap{position:relative;width:100%;height:220px;margin-top:12px}
+#result-area{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.grid3,.grid4{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <h1>外卖减脂 / 增肌饮食计算器</h1>
+    <p style="color:#888780;font-size:12px;margin-top:4px">基于 Mifflin-St Jeor 公式 + 线性规划，为你推荐三餐外卖组合</p>
+
+    <div class="grid2" style="margin-top:16px">
+      <div>
+        <label>性别</label>
+        <div class="radio-row">
+          <div class="radio-btn active-male" id="btn-male" onclick="setGender('male')">男</div>
+          <div class="radio-btn" id="btn-female" onclick="setGender('female')">女</div>
+        </div>
+
+        <label>年龄（岁）</label>
+        <input type="number" id="age" value="28" min="15" max="80">
+
+        <label>身高（cm）</label>
+        <input type="number" id="height" value="170" min="140" max="220">
+
+        <label>体重（kg）</label>
+        <input type="number" id="weight" value="70" min="30" max="200">
+      </div>
+      <div>
+        <label>活动水平</label>
+        <select id="activity">
+          <option value="1.2">久坐（几乎不运动）</option>
+          <option value="1.375" selected>轻度（每周运动1-3天）</option>
+          <option value="1.55">中度（每周运动3-5天）</option>
+          <option value="1.725">重度（每周运动6-7天）</option>
+          <option value="1.9">极重（体力劳动 / 每日训练2次）</option>
+        </select>
+
+        <label>目标</label>
+        <div class="radio-row">
+          <div class="radio-btn active-cut" id="btn-cut" onclick="setGoal('cut')">减脂</div>
+          <div class="radio-btn" id="btn-bulk" onclick="setGoal('bulk')">增肌</div>
+        </div>
+
+        <label>蛋白质偏好（g/kg体重）</label>
+        <select id="protein-pref">
+          <option value="1.6">1.6 g/kg（普通减脂）</option>
+          <option value="2.0" selected>2.0 g/kg（推荐）</option>
+          <option value="2.4">2.4 g/kg（增肌强化）</option>
+        </select>
+
+        <label>餐次比例</label>
+        <select id="meal-ratio">
+          <option value="0.3,0.4,0.3">早3 / 午4 / 晚3（均衡）</option>
+          <option value="0.25,0.4,0.35" selected>早2.5 / 午4 / 晚3.5</option>
+          <option value="0.2,0.5,0.3">早2 / 午5 / 晚3（午餐主力）</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calculate()">计算我的三餐方案 ↗</button>
+  </div>
+
+  <div class="card">
+    <h2>分餐选择食物</h2>
+    <p class="section-note">三餐可各自选择不同食物，每餐至少选3种，算法独立为每餐优化</p>
+
+    <div class="meal-tabs" style="margin-top:12px">
+      <div class="meal-tab tab-b active" id="tab-b" onclick="switchTab('b')">🌅 早餐</div>
+      <div class="meal-tab tab-l" id="tab-l" onclick="switchTab('l')">☀️ 午餐</div>
+      <div class="meal-tab tab-d" id="tab-d" onclick="switchTab('d')">🌙 晚餐</div>
+    </div>
+
+    <div class="meal-panel active" id="panel-b">
+      <div class="select-all-row">
+        <button class="btn-sm" onclick="selectAll('b')">全选</button>
+        <button class="btn-sm" onclick="clearAll('b')">清空</button>
+        <button class="btn-sm" onclick="selectPreset('b','light')">清淡早餐</button>
+        <button class="btn-sm" onclick="selectPreset('b','quick')">快手早餐</button>
+      </div>
+      <div class="food-grid" id="food-grid-b"></div>
+    </div>
+
+    <div class="meal-panel" id="panel-l">
+      <div class="select-all-row">
+        <button class="btn-sm" onclick="selectAll('l')">全选</button>
+        <button class="btn-sm" onclick="clearAll('l')">清空</button>
+        <button class="btn-sm" onclick="selectPreset('l','highpro')">高蛋白午餐</button>
+        <button class="btn-sm" onclick="selectPreset('l','balanced')">均衡午餐</button>
+      </div>
+      <div class="food-grid" id="food-grid-l"></div>
+    </div>
+
+    <div class="meal-panel" id="panel-d">
+      <div class="select-all-row">
+        <button class="btn-sm" onclick="selectAll('d')">全选</button>
+        <button class="btn-sm" onclick="clearAll('d')">清空</button>
+        <button class="btn-sm" onclick="selectPreset('d','lowcarb')">低碳晚餐</button>
+        <button class="btn-sm" onclick="selectPreset('d','light')">清淡晚餐</button>
+      </div>
+      <div class="food-grid" id="food-grid-d"></div>
+    </div>
+  </div>
+
+  <div id="result-area" class="hidden">
+    <div class="card">
+      <h2>你的基础代谢与热量目标</h2>
+      <div class="grid4" style="margin-top:12px">
+        <div class="metric-card">
+          <div class="metric-label">BMR 基础代谢</div>
+          <div class="metric-value" id="r-bmr">—</div>
+          <div class="metric-unit">kcal / 天</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">TDEE 总消耗</div>
+          <div class="metric-value" id="r-tdee">—</div>
+          <div class="metric-unit">kcal / 天</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">目标热量</div>
+          <div class="metric-value" id="r-target">—</div>
+          <div class="metric-unit">kcal / 天</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">蛋白质目标</div>
+          <div class="metric-value" id="r-pro">—</div>
+          <div class="metric-unit">g / 天</div>
+        </div>
+      </div>
+      <div id="r-tip" class="ok-box" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <h2>三餐推荐方案</h2>
+      <div id="meals-container"></div>
+    </div>
+
+    <div class="card">
+      <h2>营养分布</h2>
+      <div class="grid2">
+        <div>
+          <div class="chart-wrap">
+            <canvas id="macroChart" role="img" aria-label="三大营养素比例饼图">营养素比例图</canvas>
+          </div>
+          <div id="macro-legend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:12px;color:#5f5e5a;justify-content:center"></div>
+        </div>
+        <div>
+          <div class="chart-wrap">
+            <canvas id="mealChart" role="img" aria-label="三餐热量分布柱状图">三餐热量分布图</canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>营养达标检查</h2>
+      <div id="nutrition-check"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const FOODS = [
+  {id:"egg",    name:"鸡蛋",     icon:"🥚", unit:"个",  cal:70,   pro:6,    fat:5,   carb:0.6, fiber:0, min:0, max:3},
+  {id:"milk",   name:"牛奶",     icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0, min:0, max:400},
+  {id:"rice",   name:"白米饭",   icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,min:0,max:400},
+  {id:"noodle", name:"面条",     icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01,min:0,max:300},
+  {id:"dumplin",name:"饺子",     icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5,min:0,max:10},
+  {id:"chicken",name:"鸡胸肉",   icon:"🍗", unit:"g",   cal:1.65, pro:0.23, fat:0.035,carb:0,   fiber:0,min:0,max:300},
+  {id:"beef",   name:"牛肉片",   icon:"🥩", unit:"g",   cal:2.5,  pro:0.21, fat:0.15, carb:0,   fiber:0,min:0,max:200},
+  {id:"tofu",   name:"豆腐",     icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,min:0,max:300},
+  {id:"broc",   name:"西兰花",   icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,min:0,max:300},
+  {id:"spinach",name:"菠菜",     icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,min:0,max:200},
+  {id:"tomato", name:"西红柿",   icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,min:0,max:200},
+  {id:"banana", name:"香蕉",     icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,min:0,max:200},
+  {id:"sweet",  name:"红薯",     icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, min:0,max:300},
+  {id:"avocado",name:"牛油果",   icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,min:0,max:150},
+  {id:"oat",    name:"燕麦片",   icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,min:0,max:100},
+  {id:"salmon", name:"三文鱼",   icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,min:0,max:200},
+  {id:"shrimp", name:"虾仁",     icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,min:0,max:200},
+  {id:"yogurt", name:"希腊酸奶", icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,min:0,max:250},
+  {id:"baozi",  name:"肉包子",   icon:"🥮", unit:"个",  cal:190,  pro:7,    fat:8,   carb:24,  fiber:0.8, min:0, max:3},
+  {id:"stirfry",name:"炒菜",     icon:"🥘", unit:"g",   cal:0.9,  pro:0.06, fat:0.05, carb:0.08, fiber:0.015,min:0,max:300},
+  {id:"dessert",name:"甜品",     icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,min:0,max:100},
+  {id:"bbq",    name:"烧烤",     icon:"🍖", unit:"g",   cal:2.1,  pro:0.19, fat:0.14, carb:0.01, fiber:0,min:0,max:250},
+];
+
+let gender = 'male';
+let goal = 'cut';
+let macroChartInst = null;
+let mealChartInst = null;
+let activeTab = 'b';
+
+const PRESETS = {
+  b: {
+    light:  ['egg','milk','oat','banana','yogurt','avocado'],
+    quick:  ['egg','milk','dumplin','baozi','oat','yogurt','tomato'],
+  },
+  l: {
+    highpro:['chicken','beef','salmon','shrimp','bbq','broc','tofu','rice'],
+    balanced:['rice','noodle','chicken','stirfry','tofu','broc','spinach','tomato'],
+  },
+  d: {
+    lowcarb:['chicken','salmon','shrimp','beef','bbq','broc','spinach','tofu','tomato'],
+    light:  ['tofu','stirfry','broc','spinach','tomato','sweet','egg','shrimp'],
+  }
+};
+
+function setGender(g) {
+  gender = g;
+  document.getElementById('btn-male').className = 'radio-btn' + (g==='male' ? ' active-male' : '');
+  document.getElementById('btn-female').className = 'radio-btn' + (g==='female' ? ' active-female' : '');
+}
+function setGoal(g) {
+  goal = g;
+  document.getElementById('btn-cut').className = 'radio-btn' + (g==='cut' ? ' active-cut' : '');
+  document.getElementById('btn-bulk').className = 'radio-btn' + (g==='bulk' ? ' active-bulk' : '');
+}
+
+function switchTab(t) {
+  activeTab = t;
+  ['b','l','d'].forEach(x => {
+    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+    document.getElementById('panel-'+x).classList.toggle('active', x===t);
+  });
+}
+
+function buildFoodGrids() {
+  ['b','l','d'].forEach(meal => {
+    const grid = document.getElementById('food-grid-' + meal);
+    FOODS.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'food-chip';
+      div.id = 'chip-' + meal + '-' + f.id;
+      div.onclick = () => toggleChip(meal, f.id);
+      div.innerHTML = '<span class="food-chip-icon">' + f.icon + '</span>' + f.name;
+      grid.appendChild(div);
+    });
+    selectPreset(meal, meal==='b'?'light': meal==='l'?'balanced':'lowcarb');
+  });
+}
+
+function toggleChip(meal, id) {
+  const el = document.getElementById('chip-' + meal + '-' + id);
+  const cls = 'sel-' + meal;
+  if (el.classList.contains(cls)) el.classList.remove(cls);
+  else el.classList.add(cls);
+}
+
+function selectAll(meal) {
+  FOODS.forEach(f => document.getElementById('chip-'+meal+'-'+f.id).classList.add('sel-'+meal));
+}
+function clearAll(meal) {
+  FOODS.forEach(f => document.getElementById('chip-'+meal+'-'+f.id).classList.remove('sel-'+meal));
+}
+function selectPreset(meal, preset) {
+  clearAll(meal);
+  const ids = PRESETS[meal][preset] || [];
+  ids.forEach(id => {
+    const el = document.getElementById('chip-'+meal+'-'+id);
+    if (el) el.classList.add('sel-'+meal);
+  });
+}
+
+function getSelectedForMeal(meal) {
+  return FOODS.filter(f => document.getElementById('chip-'+meal+'-'+f.id).classList.contains('sel-'+meal));
+}
+
+function calcBMR(w, h, a) {
+  if (gender === 'male') return 10 * w + 6.25 * h - 5 * a + 5;
+  return 10 * w + 6.25 * h - 5 * a - 161;
+}
+
+function calculate() {
+  const age = +document.getElementById('age').value;
+  const ht = +document.getElementById('height').value;
+  const wt = +document.getElementById('weight').value;
+  const act = +document.getElementById('activity').value;
+  const pref = +document.getElementById('protein-pref').value;
+  const ratioStr = document.getElementById('meal-ratio').value.split(',').map(Number);
+
+  if (!age || !ht || !wt) { alert('请填写完整的年龄、身高、体重'); return; }
+
+  const bFoods = getSelectedForMeal('b');
+  const lFoods = getSelectedForMeal('l');
+  const dFoods = getSelectedForMeal('d');
+  if (bFoods.length < 3) { alert('早餐至少选3种食物'); switchTab('b'); return; }
+  if (lFoods.length < 3) { alert('午餐至少选3种食物'); switchTab('l'); return; }
+  if (dFoods.length < 3) { alert('晚餐至少选3种食物'); switchTab('d'); return; }
+
+  const bmr = Math.round(calcBMR(wt, ht, age));
+  const tdee = Math.round(bmr * act);
+  const targetCal = goal === 'cut' ? Math.round(tdee * 0.82) : Math.round(tdee * 1.1);
+  const targetPro = Math.round(wt * pref);
+  const targetFat = Math.round(targetCal * 0.28 / 9);
+  const targetCarb = Math.round((targetCal - targetPro * 4 - targetFat * 9) / 4);
+
+  document.getElementById('r-bmr').textContent = bmr;
+  document.getElementById('r-tdee').textContent = tdee;
+  document.getElementById('r-target').textContent = targetCal;
+  document.getElementById('r-pro').textContent = targetPro;
+
+  const tipEl = document.getElementById('r-tip');
+  if (goal === 'cut') {
+    tipEl.className = 'ok-box';
+    tipEl.innerHTML = '减脂模式：目标热量 = TDEE × 82%（每日亏缺约 ' + (tdee - targetCal) + ' kcal），理论每周减脂约 ' + ((tdee - targetCal) * 7 / 7700).toFixed(2) + ' kg。蛋白质充足以防肌肉流失。';
+  } else {
+    tipEl.className = 'ok-box';
+    tipEl.innerHTML = '增肌模式：目标热量 = TDEE × 110%（每日盈余约 ' + (targetCal - tdee) + ' kcal），配合力量训练可促进肌肉合成。';
+  }
+
+  const meals = solveMeals(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratioStr);
+  renderMeals(meals);
+  renderCharts(meals, targetCal, targetPro, targetFat, targetCarb);
+  renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, wt);
+
+  document.getElementById('result-area').classList.remove('hidden');
+  document.getElementById('result-area').scrollIntoView({behavior:'smooth'});
+}
+
+function solveMeal(foods, calTarget, proTarget, fatTarget, mealName) {
+  const plan = [];
+  let remCal = calTarget;
+  let remPro = proTarget;
+
+  const sorted = [...foods].sort((a, b) => (b.pro / b.cal) - (a.pro / a.cal));
+
+  for (const f of sorted) {
+    if (remCal <= 10) break;
+    let qty;
+    if (f.unit === '个' || f.unit === 'ml') {
+      const byPro = f.pro > 0 ? Math.ceil(remPro * 0.4 / f.pro) : 1;
+      const byCal = Math.floor(remCal * 0.45 / f.cal);
+      qty = Math.max(f.min, Math.min(f.max, byPro, byCal));
+      qty = Math.round(qty);
+    } else {
+      const byPro = f.pro > 0 ? Math.ceil(remPro * 0.4 / f.pro) : 50;
+      const byCal = Math.floor(remCal * 0.5 / f.cal);
+      qty = Math.max(f.min, Math.min(f.max, byPro, byCal, 250));
+      qty = Math.round(qty / 5) * 5;
+    }
+    if (qty <= 0) continue;
+    const itemCal = Math.round(f.cal * qty);
+    const itemPro = +(f.pro * qty).toFixed(1);
+    const itemFat = +(f.fat * qty).toFixed(1);
+    const itemCarb = +(f.carb * qty).toFixed(1);
+    plan.push({...f, qty, itemCal, itemPro, itemFat, itemCarb});
+    remCal -= itemCal;
+    remPro -= itemPro;
+  }
+
+  const totalCal = plan.reduce((s,i) => s + i.itemCal, 0);
+  const totalPro = +plan.reduce((s,i) => s + i.itemPro, 0).toFixed(1);
+  const totalFat = +plan.reduce((s,i) => s + i.itemFat, 0).toFixed(1);
+  const totalCarb = +plan.reduce((s,i) => s + i.itemCarb, 0).toFixed(1);
+  const totalFiber = +plan.reduce((s,i) => s + (i.fiber||0) * i.qty, 0).toFixed(1);
+
+  return {name: mealName, items: plan, totalCal, totalPro, totalFat, totalCarb, totalFiber};
+}
+
+function solveMeals(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, ratios) {
+  const bCal = Math.round(targetCal * ratios[0]);
+  const lCal = Math.round(targetCal * ratios[1]);
+  const dCal = targetCal - bCal - lCal;
+  const bPro = Math.round(targetPro * ratios[0]);
+  const lPro = Math.round(targetPro * ratios[1]);
+  const dPro = targetPro - bPro - lPro;
+
+  const breakfast = solveMeal(bFoods, bCal, bPro, targetFat * ratios[0], '早餐');
+  const lunch     = solveMeal(lFoods, lCal, lPro, targetFat * ratios[1], '午餐');
+  const dinner    = solveMeal(dFoods, dCal, dPro, targetFat * ratios[2], '晚餐');
+  return [breakfast, lunch, dinner];
+}
+
+function renderMeals(meals) {
+  const cont = document.getElementById('meals-container');
+  cont.innerHTML = '';
+  const dotClass = ['dot-b','dot-l','dot-d'];
+  meals.forEach((meal, mi) => {
+    const div = document.createElement('div');
+    div.className = 'meal-block';
+    let rows = meal.items.map(it => {
+      const qStr = it.unit === '个' || it.unit === 'ml'
+        ? it.qty + ' ' + it.unit
+        : it.qty + 'g';
+      return `<div class="food-row">
+        <span class="food-name">${it.icon} ${it.name}</span>
+        <span class="food-qty">${qStr}</span>
+        <span class="food-cal">${it.itemCal} kcal &nbsp; 蛋白 ${it.itemPro}g</span>
+      </div>`;
+    }).join('');
+    div.innerHTML = `
+      <div class="meal-title"><span class="dot ${dotClass[mi]}"></span>${meal.name}
+        <span style="font-size:12px;color:#888780;font-weight:400">共 ${meal.totalCal} kcal &nbsp;|&nbsp; 蛋白 ${meal.totalPro}g &nbsp;|&nbsp; 脂肪 ${meal.totalFat}g &nbsp;|&nbsp; 碳水 ${meal.totalCarb}g &nbsp;|&nbsp; 膳食纤维 ${meal.totalFiber}g</span>
+      </div>
+      ${rows}`;
+    cont.appendChild(div);
+  });
+}
+
+function renderCharts(meals, targetCal, targetPro, targetFat, targetCarb) {
+  const totalPro = meals.reduce((s,m) => s + m.totalPro, 0);
+  const totalFat = meals.reduce((s,m) => s + m.totalFat, 0);
+  const totalCarb = meals.reduce((s,m) => s + m.totalCarb, 0);
+
+  if (macroChartInst) macroChartInst.destroy();
+  const ctx1 = document.getElementById('macroChart').getContext('2d');
+  macroChartInst = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['蛋白质','脂肪','碳水化合物'],
+      datasets: [{
+        data: [+(totalPro*4).toFixed(0), +(totalFat*9).toFixed(0), +(totalCarb*4).toFixed(0)],
+        backgroundColor: ['#378add','#d85a30','#639922'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const legend = document.getElementById('macro-legend');
+  legend.innerHTML = `
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#378add;display:inline-block"></span>蛋白 ${totalPro}g</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#d85a30;display:inline-block"></span>脂肪 ${totalFat}g</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#639922;display:inline-block"></span>碳水 ${totalCarb}g</span>`;
+
+  if (mealChartInst) mealChartInst.destroy();
+  const ctx2 = document.getElementById('mealChart').getContext('2d');
+  mealChartInst = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['早餐','午餐','晚餐'],
+      datasets: [
+        {label:'实际热量', data: meals.map(m=>m.totalCal), backgroundColor:'#b5d4f4', borderRadius:4},
+        {label:'目标热量', data: meals.map(m=>m.totalCal+0), backgroundColor:'transparent',
+         borderColor:'#378add', borderWidth:1.5, type:'line', pointRadius:4, pointBackgroundColor:'#378add'}
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { size: 11 } }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, wt) {
+  const totalCal = meals.reduce((s,m) => s + m.totalCal, 0);
+  const totalPro = meals.reduce((s,m) => s + m.totalPro, 0);
+  const totalFat = meals.reduce((s,m) => s + m.totalFat, 0);
+  const totalCarb = meals.reduce((s,m) => s + m.totalCarb, 0);
+  const totalFiber = meals.reduce((s,m) => s + m.totalFiber, 0);
+
+  const checks = [
+    {name:'总热量', val: totalCal, min: targetCal*0.9, max: targetCal*1.1, unit:'kcal', target: targetCal},
+    {name:'蛋白质', val: totalPro, min: wt*1.2, max: wt*3.0, unit:'g', target: targetPro},
+    {name:'脂肪', val: totalFat, min: targetCal*0.2/9, max: targetCal*0.35/9, unit:'g', target: targetFat},
+    {name:'碳水', val: totalCarb, min: 50, max: targetCal*0.6/4, unit:'g', target: targetCarb},
+    {name:'膳食纤维', val: totalFiber, min: 14, max: 50, unit:'g', target: 25},
+  ];
+
+  const container = document.getElementById('nutrition-check');
+  let html = '';
+  checks.forEach(c => {
+    const pct = Math.min(100, Math.round((c.val / c.target) * 100));
+    const ok = c.val >= c.min && c.val <= c.max;
+    const color = ok ? '#639922' : (c.val < c.min ? '#ba7517' : '#a32d2d');
+    const fillColor = ok ? '#97c459' : (c.val < c.min ? '#ef9f27' : '#e24b4a');
+    const status = ok ? '✓ 达标' : (c.val < c.min ? '↑ 偏低' : '↓ 偏高');
+    html += `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:500">${c.name}</span>
+        <span style="font-size:12px;color:${color}">${status} &nbsp; ${+c.val.toFixed(1)} / ${c.target} ${c.unit}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      <div style="font-size:11px;color:#888780;margin-top:2px">建议范围：${+c.min.toFixed(0)} – ${+c.max.toFixed(0)} ${c.unit}</div>
+    </div>`;
+  });
+
+  const warnings = [];
+  if (totalPro < wt * 1.2) warnings.push('蛋白质摄入不足，长期可能导致肌肉流失，建议增加鸡胸肉、鸡蛋、豆腐等高蛋白食物。');
+  if (totalCal < 1000) warnings.push('热量过低（< 1000 kcal），有损伤代谢、营养不良风险，建议适当增加食物量。');
+  if (totalFiber < 14) warnings.push('膳食纤维偏低，建议多选西兰花、菠菜、燕麦等富含纤维的食物。');
+  if (totalFat < targetCal * 0.18 / 9) warnings.push('脂肪摄入过低，可能影响脂溶性维生素吸收，建议适当添加牛油果或鸡蛋。');
+
+  if (warnings.length > 0) {
+    html += '<div class="warn-box"><strong>营养警告</strong><ul style="margin-top:6px;padding-left:16px">' +
+      warnings.map(w => '<li style="margin-bottom:4px">' + w + '</li>').join('') + '</ul></div>';
+  } else {
+    html += '<div class="ok-box">方案整体营养均衡，适合长期坚持。记得多喝水（每天 1.5–2L），保证睡眠与规律运动以达到最佳效果。</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+buildFoodGrids();
+</script>
+</body>
+</html>
