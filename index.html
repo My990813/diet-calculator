@@ -425,7 +425,7 @@ function calculate() {
     tipEl.innerHTML = '增肌模式：目标热量 = TDEE × 110%（每日盈余约 ' + (targetCal - tdee) + ' kcal），配合力量训练可促进肌肉合成。';
   }
 
-  const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, ratioStr);
+  const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, targetVC, ratioStr);
   const actualVC = +(meals.reduce((s, m) => s + m.totalVC, 0).toFixed(0));
   document.getElementById('r-vc-actual').textContent = actualVC;
   document.getElementById('r-vc-actual').style.color = actualVC >= 60 ? '#639922' : '#a32d2d';
@@ -458,7 +458,7 @@ function clampQty(food, rawQty, maxSingleCal) {
   return Math.max(0, qty);
 }
 
-function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
+function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, mealName) {
   if (foodList.length < MIN_MEAL_FOODS) {
     // fallback: 食物太少，直接全用
     foodList = [...foodList];
@@ -552,6 +552,7 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
     const totalC = finalPlan.reduce((s, i) => s + i.itemCal, 0);
     const totalP = finalPlan.reduce((s, i) => s + i.itemPro, 0);
     const totalCarb = finalPlan.reduce((s, i) => s + i.itemCarb, 0);
+    const totalVC = finalPlan.reduce((s, i) => s + i.itemVC, 0);
     const cats = new Set(finalPlan.map(i => i.cat));
     const hasProtein = cats.has('protein');
     const hasCarb = cats.has('carb');
@@ -565,12 +566,16 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
     finalPlan.forEach(i => { catCounts[i.cat] = (catCounts[i.cat] || 0) + 1; });
     const sameCatPenalty = Object.values(catCounts).reduce((s, c) => s + (c > 1 ? (c - 1) * 8 : 0), 0);
 
+    // VC 奖励：达标给大分，不达标按比例给分
+    const vcBonus = vcGoal > 0 ? Math.min(totalVC / vcGoal, 1.2) * 20 : 0;
+
     const score = mandatoryBonus
                 - Math.abs(totalC - calGoal) * 1.2
                 - Math.abs(totalP - proGoal) * 3
                 - Math.abs(totalCarb - carbGoal) * 2
                 - sameCatPenalty
-                + cats.size * 5;
+                + cats.size * 5
+                + vcBonus;
 
     if (score > bestScore) {
       bestScore = score;
@@ -588,7 +593,7 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
   return { name: mealName, items: bestPlan, totalCal, totalPro, totalFat, totalCarb, totalFiber, totalVC };
 }
 
-function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, ratios) {
+function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, targetVC, ratios) {
   const bCal = Math.round(targetCal * ratios[0]);
   const lCal = Math.round(targetCal * ratios[1]);
   const dCal = targetCal - bCal - lCal;
@@ -598,10 +603,13 @@ function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, t
   const bCarb = Math.round(targetCarb * ratios[0]);
   const lCarb = Math.round(targetCarb * ratios[1]);
   const dCarb = targetCarb - bCarb - lCarb;
+  const bVC = Math.round(targetVC * ratios[0]);
+  const lVC = Math.round(targetVC * ratios[1]);
+  const dVC = targetVC - bVC - lVC;
 
-  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, '早餐');
-  const lunch     = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, '午餐');
-  const dinner    = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, '晚餐');
+  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, bVC, '早餐');
+  const lunch     = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, lVC, '午餐');
+  const dinner    = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, dVC, '晚餐');
   return [breakfast, lunch, dinner];
 }
 
