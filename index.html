@@ -48,6 +48,8 @@ input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
 .food-cal{color:#ba7517;font-size:12px;font-weight:500}
 .warn-box{background:#fcebeb;border:0.5px solid rgba(163,45,45,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#791f1f;margin-top:8px}
 .ok-box{background:#eaf3de;border:0.5px solid rgba(99,153,34,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#27500a;margin-top:8px}
+.warn-box{background:#fff7e6;border:0.5px solid rgba(218,140,32,0.4);border-radius:8px;padding:10px 14px;font-size:12px;color:#7a4e0a;margin-top:12px;display:none}
+.warn-box.show{display:block}
 .hidden{display:none}
 .progress-bar{height:6px;border-radius:3px;background:#e9e8e3;overflow:hidden;margin-top:4px}
 .progress-fill{height:100%;border-radius:3px;transition:width .4s}
@@ -215,6 +217,7 @@ input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
 
     <div class="card">
       <h2>三餐推荐方案</h2>
+      <div id="cross-meal-warn" class="warn-box"></div>
       <div id="meals-container"></div>
     </div>
 
@@ -436,6 +439,27 @@ function calculate() {
   document.getElementById('r-vc-actual').textContent = actualVC;
   document.getElementById('r-vc-actual').style.color = actualVC >= 60 ? '#639922' : '#a32d2d';
   renderMeals(meals);
+
+  // === 跨餐重复检测与警告 ===
+  const foodMealMap = {}; // { foodId: { name, icon, meals: [mealName] } }
+  meals.forEach((meal) => {
+    meal.items.forEach(item => {
+      if (!foodMealMap[item.id]) foodMealMap[item.id] = { name: item.name, icon: item.icon, meals: [] };
+      foodMealMap[item.id].meals.push(meal.name);
+    });
+  });
+  const dupFoods = Object.values(foodMealMap).filter(f => f.meals.length > 1);
+  const warnEl = document.getElementById('cross-meal-warn');
+  if (dupFoods.length > 0) {
+    const lines = dupFoods.map(f => `${f.icon} <b>${f.name}</b> 出现在 ${f.meals.join('、')}`);
+    warnEl.innerHTML = '⚠️ <b>跨餐重复提醒：</b>以下食物在多个餐次中重复推荐——<br>' + lines.join('；') +
+      '<br><span style="color:#8a6d3b">建议：手动替换其中一餐的该食物，或将该食物从多余餐次的预设中移除后重新计算。</span>';
+    warnEl.classList.add('show');
+  } else {
+    warnEl.classList.remove('show');
+    warnEl.innerHTML = '';
+  }
+
   renderCharts(meals, targetCal, targetPro, targetFat, targetCarb);
   renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, targetVC, wt);
 
@@ -474,17 +498,26 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
   let bestScore = -Infinity;
   const maxSingleCal = Math.round(calGoal * MAX_SINGLE_FOOD_RATIO);
 
+  // === 跨餐硬排除：已被前面餐次用过的食物直接从候选池移除 ===
+  // 评分惩罚/权重偏斜是软约束，面对用户刻意选入的少量食物时仍会重复。
+  // 硬排除从源头保证：同一食物最多出现在 1 餐中（兜底时放宽到 2 餐）。
+  let availFoods = foodList.filter(f => !usedFoods[f.id]);
+  let fallbackMode = false;
+  if (availFoods.length < MIN_MEAL_FOODS) {
+    // 兜底：排除后候选食物太少，允许已用食物参与但标记 fallback
+    availFoods = [...foodList];
+    fallbackMode = true;
+  }
+
   for (let trial = 0; trial < MC_SAMPLES; trial++) {
     // === Step 1: 随机抽取 k 种食物（k = 3~7，越多样化越好） ===
-    // 跨餐偏见：前面餐次已用过的食物降低抽取概率，迫使算法探索不同食物
     const k = MIN_MEAL_FOODS + Math.floor(Math.random() * (MAX_MEAL_FOODS - MIN_MEAL_FOODS + 1));
     const weighted = [];
-    for (const f of foodList) {
-      const priorUsage = usedFoods[f.id] || 0;
-      const maxPerFood = f.max || 999;
-      const usageRatio = Math.min(1, priorUsage / Math.max(1, maxPerFood));
-      // 未用过的食物权重 3x，半用过的 2x，用满的 1x
-      const weight = Math.max(1, Math.round(3 * (1 - usageRatio)));
+    for (const f of availFoods) {
+      const isPriorUsed = !!usedFoods[f.id];
+      // 硬排除模式下：已用食物 1x 权重（仅作兜底），未用食物 5x 权重
+      // 非硬排除模式（正常情况）：所有候选食物均未用过，全部 3x 权重
+      const weight = fallbackMode ? (isPriorUsed ? 1 : 5) : 3;
       for (let w = 0; w < weight; w++) weighted.push(f);
     }
     const shuffled = [...weighted].sort(() => Math.random() - 0.5);
@@ -586,17 +619,14 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
     const vcBonus = vcGoal > 0 ? Math.min(totalVC / vcGoal, 1.2) * 20 : 0;
 
     // 跨餐惩罚：已在前面餐次用过的食物，当前餐再用要扣分
-    // 用量占该食物单次上限的比例越高，扣分越重 → 迫使算法分散到不同蛋白源/碳水源
+    // 正常情况下 usedFoods 中的食物已被 Step1 硬排除，此惩罚针对 fallback 兜底场景
     let crossMealPenalty = 0;
     const crossChecked = new Set();
     for (const item of finalPlan) {
       if (crossChecked.has(item.id)) continue;
       crossChecked.add(item.id);
-      const priorUsage = usedFoods[item.id] || 0;
-      if (priorUsage > 0) {
-        const maxPerMeal = item.max || 999;
-        const usageRatio = Math.min(1, priorUsage / maxPerMeal);
-        crossMealPenalty += usageRatio * 120;
+      if (usedFoods[item.id]) {
+        crossMealPenalty += 120;  // flat penalty: 任何前面用过的食物扣 120 分
       }
     }
 
@@ -639,20 +669,19 @@ function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, t
   const lVC = Math.round(targetVC * ratios[1]);
   const dVC = targetVC - bVC - lVC;
 
-  // === 跨餐食物追踪：顺序求解，避免同一食物在三餐重复出现 ===
-  // 原理：每餐独立 MC 采样时看不到其他餐选了啥 → 蛋白效率高的食物（如鸡蛋）
-  // 会被三餐同时选中。修复：早餐先解 → 记录已用食物 → 午餐/晚餐评分时对已用
-  // 食物加跨餐惩罚分，算法自然转向选择不同蛋白源/碳水源分散到各餐。
-  const usedFoods = {};  // { foodId: 前面餐次已用的总量 }
+  // === 跨餐食物追踪：顺序求解，同一食物最多出现在 1 餐中 ===
+  // 硬排除 > 评分惩罚：已被前面餐次用过的食物直接从候选池移除（Step1），
+  // 仅在该餐候选食物不足 MIN_MEAL_FOODS 时才兜底放回。
+  const usedFoods = {};  // { foodId: true } — 前面餐次已用过的食物集合
 
   const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, bVC, '早餐', usedFoods);
   for (const item of breakfast.items) {
-    usedFoods[item.id] = (usedFoods[item.id] || 0) + item.qty;
+    usedFoods[item.id] = true;
   }
 
   const lunch = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, lVC, '午餐', usedFoods);
   for (const item of lunch.items) {
-    usedFoods[item.id] = (usedFoods[item.id] || 0) + item.qty;
+    usedFoods[item.id] = true;
   }
 
   const dinner = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, dVC, '晚餐', usedFoods);
