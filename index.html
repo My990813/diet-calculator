@@ -267,6 +267,7 @@ const FOODS = [
   {id:"scorn",  name:"甜玉米",     icon:"🌽", unit:"g",   cal:0.86, pro:0.032,fat:0.012,carb:0.190,fiber:0.027,vc:0.068,min:0, max:300, cat:"carb"},
   {id:"wcorns", name:"糯玉米",     icon:"🌽", unit:"g",   cal:1.40, pro:0.045,fat:0.016,carb:0.290,fiber:0.023,vc:0,    min:0, max:300, cat:"carb"},
   {id:"oat",    name:"燕麦片",     icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,vc:0, min:0, max:100, cat:"carb"},
+  {id:"bread",  name:"无糖少油面包", icon:"🍞", unit:"g",   cal:2.65, pro:0.09, fat:0.04, carb:0.48, fiber:0.03, vc:0, min:0, max:200, cat:"carb"},
   {id:"banana", name:"香蕉",       icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,vc:0.087,min:0, max:200, cat:"carb"},
   {id:"apple",  name:"苹果",       icon:"🍎", unit:"g",   cal:0.53, pro:0.002,fat:0.002,carb:0.135,fiber:0.024,vc:0.03, min:0, max:300, cat:"carb"},
   {id:"pear",   name:"梨子",       icon:"🍐", unit:"g",   cal:0.51, pro:0.003,fat:0.002,carb:0.131,fiber:0.031,vc:0.04, min:0, max:300, cat:"carb"},
@@ -309,8 +310,8 @@ let activeTab = 'b';
 
 const PRESETS = {
   b: {
-    light:  ['egg','milk','oat','banana','yogurt','avocado','berry','strawb','scorn'],
-    quick:  ['egg','milk','dumplin','oat','yogurt','tomato','apple','banana'],
+    light:  ['egg','milk','bread','banana','yogurt','avocado','berry','strawb','scorn'],
+    quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple'],
   },
   l: {
     highpro:['chicken','beef','salmon','shrimp','pork','broc','tofu','rice'],
