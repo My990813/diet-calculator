@@ -264,6 +264,8 @@ const FOODS = [
   {id:"rice",   name:"白米饭",     icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,vc:0, min:0, max:400, cat:"carb"},
   {id:"noodle", name:"面条",       icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01, vc:0, min:0, max:300, cat:"carb"},
   {id:"sweet",  name:"红薯",       icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, vc:0.24, min:0, max:300, cat:"carb"},
+  {id:"scorn",  name:"甜玉米",     icon:"🌽", unit:"g",   cal:0.86, pro:0.032,fat:0.012,carb:0.190,fiber:0.027,vc:0.068,min:0, max:300, cat:"carb"},
+  {id:"wcorns", name:"糯玉米",     icon:"🌽", unit:"g",   cal:1.40, pro:0.045,fat:0.016,carb:0.290,fiber:0.023,vc:0,    min:0, max:300, cat:"carb"},
   {id:"oat",    name:"燕麦片",     icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,vc:0, min:0, max:100, cat:"carb"},
   {id:"banana", name:"香蕉",       icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,vc:0.087,min:0, max:200, cat:"carb"},
   {id:"apple",  name:"苹果",       icon:"🍎", unit:"g",   cal:0.53, pro:0.002,fat:0.002,carb:0.135,fiber:0.024,vc:0.03, min:0, max:300, cat:"carb"},
@@ -307,16 +309,16 @@ let activeTab = 'b';
 
 const PRESETS = {
   b: {
-    light:  ['egg','milk','oat','banana','yogurt','avocado','berry','strawb'],
+    light:  ['egg','milk','oat','banana','yogurt','avocado','berry','strawb','scorn'],
     quick:  ['egg','milk','dumplin','oat','yogurt','tomato','apple','banana'],
   },
   l: {
     highpro:['chicken','beef','salmon','shrimp','pork','broc','tofu','rice'],
-    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan'],
+    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn'],
   },
   d: {
     lowcarb:['chicken','salmon','shrimp','beef','tuna','broc','spinach','tofu','tomato','eggplant'],
-    light:  ['tofu','broc','spinach','tomato','sweet','egg','shrimp','okra','kelp','choysum'],
+    light:  ['tofu','broc','spinach','tomato','sweet','scorn','egg','shrimp','okra','kelp','choysum'],
   }
 };
 
