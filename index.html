@@ -198,6 +198,18 @@ input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
           <div class="metric-unit">g / 天</div>
         </div>
       </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="metric-card">
+          <div class="metric-label">维生素C目标</div>
+          <div class="metric-value" id="r-vc">100</div>
+          <div class="metric-unit">mg / 天（中国居民推荐量）</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">实际摄入VC</div>
+          <div class="metric-value" id="r-vc-actual">—</div>
+          <div class="metric-unit">mg / 天</div>
+        </div>
+      </div>
       <div id="r-tip" class="ok-box" style="margin-top:12px"></div>
     </div>
 
@@ -232,29 +244,59 @@ input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
 
 <script>
 // cat: 'protein' 蛋白源 | 'carb' 碳水源 | 'mixed' 混合 | 'veggie' 蔬菜 | 'dairy' 奶制品 | 'fat' 脂肪源 | 'treat' 高热量零食
+// vc: 维生素C mg/单位（g表示每克，个表示每个，ml表示每毫升）
 const FOODS = [
-  {id:"egg",    name:"鸡蛋",     icon:"🥚", unit:"个",  cal:70,   pro:6,    fat:5,   carb:0.6, fiber:0, min:0, max:3,   cat:"protein"},
-  {id:"milk",   name:"牛奶",     icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0, min:0, max:400, cat:"dairy"},
-  {id:"rice",   name:"白米饭",   icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,min:0,max:400, cat:"carb"},
-  {id:"noodle", name:"面条",     icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01,min:0,max:300, cat:"carb"},
-  {id:"dumplin",name:"饺子",     icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5,min:0,max:10,  cat:"mixed"},
-  {id:"chicken",name:"鸡胸肉",   icon:"🍗", unit:"g",   cal:1.65, pro:0.23, fat:0.035,carb:0,   fiber:0,min:0,max:300, cat:"protein"},
-  {id:"beef",   name:"牛肉片",   icon:"🥩", unit:"g",   cal:2.5,  pro:0.21, fat:0.15, carb:0,   fiber:0,min:0,max:200, cat:"protein"},
-  {id:"tofu",   name:"豆腐",     icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,min:0,max:300, cat:"protein"},
-  {id:"broc",   name:"西兰花",   icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,min:0,max:300, cat:"veggie"},
-  {id:"spinach",name:"菠菜",     icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,min:0,max:200, cat:"veggie"},
-  {id:"tomato", name:"西红柿",   icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,min:0,max:200, cat:"veggie"},
-  {id:"banana", name:"香蕉",     icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,min:0,max:200, cat:"carb"},
-  {id:"sweet",  name:"红薯",     icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, min:0,max:300, cat:"carb"},
-  {id:"avocado",name:"牛油果",   icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,min:0,max:150, cat:"fat"},
-  {id:"oat",    name:"燕麦片",   icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,min:0,max:100, cat:"carb"},
-  {id:"salmon", name:"三文鱼",   icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,min:0,max:200, cat:"protein"},
-  {id:"shrimp", name:"虾仁",     icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,min:0,max:200, cat:"protein"},
-  {id:"yogurt", name:"希腊酸奶", icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,min:0,max:250, cat:"dairy"},
-  {id:"baozi",  name:"肉包子",   icon:"🥮", unit:"个",  cal:190,  pro:7,    fat:8,   carb:24,  fiber:0.8, min:0, max:3,   cat:"mixed"},
-  {id:"stirfry",name:"炒菜",     icon:"🥘", unit:"g",   cal:0.9,  pro:0.06, fat:0.05, carb:0.08, fiber:0.015,min:0,max:300, cat:"mixed"},
-  {id:"dessert",name:"甜品",     icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,min:0,max:100, cat:"treat"},
-  {id:"bbq",    name:"烧烤",     icon:"🍖", unit:"g",   cal:2.1,  pro:0.19, fat:0.14, carb:0.01, fiber:0,min:0,max:250, cat:"protein"},
+  // === 蛋白源 ===
+  {id:"egg",    name:"鸡蛋",       icon:"🥚", unit:"个",  cal:70,   pro:6,    fat:5,   carb:0.6, fiber:0,   vc:0,    min:0, max:3,   cat:"protein"},
+  {id:"chicken",name:"鸡胸肉",     icon:"🍗", unit:"g",   cal:1.65, pro:0.23, fat:0.035,carb:0,   fiber:0,   vc:0,    min:0, max:300, cat:"protein"},
+  {id:"chickth",name:"去皮鸡腿肉", icon:"🍗", unit:"g",   cal:1.19, pro:0.205,fat:0.038,carb:0,   fiber:0,   vc:0,    min:0, max:300, cat:"protein"},
+  {id:"beef",   name:"牛肉片",     icon:"🥩", unit:"g",   cal:2.5,  pro:0.21, fat:0.15, carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"pork",   name:"猪肉（瘦）", icon:"🥩", unit:"g",   cal:1.43, pro:0.20, fat:0.062,carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"lamb",   name:"羊排",       icon:"🍖", unit:"g",   cal:2.0,  pro:0.18, fat:0.14, carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"duck",   name:"去皮鸭肉",   icon:"🦆", unit:"g",   cal:1.36, pro:0.185,fat:0.06, carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"goose",  name:"去皮鹅肉",   icon:"🦆", unit:"g",   cal:1.61, pro:0.22, fat:0.07, carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"salmon", name:"三文鱼",     icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"tuna",   name:"金枪鱼末",   icon:"🐟", unit:"g",   cal:1.16, pro:0.26, fat:0.008,carb:0,   fiber:0,   vc:0,    min:0, max:150, cat:"protein"},
+  {id:"shrimp", name:"虾仁",       icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"tofu",   name:"豆腐",       icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,vc:0,  min:0, max:300, cat:"protein"},
+
+  // === 碳水源 ===
+  {id:"rice",   name:"白米饭",     icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,vc:0, min:0, max:400, cat:"carb"},
+  {id:"noodle", name:"面条",       icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01, vc:0, min:0, max:300, cat:"carb"},
+  {id:"sweet",  name:"红薯",       icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, vc:0.24, min:0, max:300, cat:"carb"},
+  {id:"oat",    name:"燕麦片",     icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,vc:0, min:0, max:100, cat:"carb"},
+  {id:"banana", name:"香蕉",       icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,vc:0.087,min:0, max:200, cat:"carb"},
+  {id:"apple",  name:"苹果",       icon:"🍎", unit:"g",   cal:0.53, pro:0.002,fat:0.002,carb:0.135,fiber:0.024,vc:0.03, min:0, max:300, cat:"carb"},
+  {id:"pear",   name:"梨子",       icon:"🍐", unit:"g",   cal:0.51, pro:0.003,fat:0.002,carb:0.131,fiber:0.031,vc:0.04, min:0, max:300, cat:"carb"},
+  {id:"grape",  name:"葡萄",       icon:"🍇", unit:"g",   cal:0.69, pro:0.007,fat:0.002,carb:0.181,fiber:0.009,vc:0.032,min:0, max:200, cat:"carb"},
+  {id:"raisin", name:"提子",       icon:"🍇", unit:"g",   cal:0.43, pro:0.005,fat:0.002,carb:0.103,fiber:0.006,vc:0.25, min:0, max:200, cat:"carb"},
+  {id:"mango",  name:"芒果",       icon:"🥭", unit:"g",   cal:0.60, pro:0.008,fat:0.004,carb:0.15, fiber:0.016,vc:0.364,min:0, max:300, cat:"carb"},
+  {id:"lychee", name:"荔枝",       icon:"🫐", unit:"g",   cal:0.66, pro:0.008,fat:0.004,carb:0.165,fiber:0.013,vc:0.715,min:0, max:200, cat:"carb"},
+  {id:"pineapp",name:"菠萝",       icon:"🍍", unit:"g",   cal:0.41, pro:0.005,fat:0.001,carb:0.108,fiber:0.013,vc:0.18, min:0, max:300, cat:"carb"},
+  {id:"melon",  name:"西瓜",       icon:"🍉", unit:"g",   cal:0.31, pro:0.006,fat:0.001,carb:0.068,fiber:0.004,vc:0.081,min:0, max:500, cat:"carb"},
+  {id:"nectar", name:"油桃",       icon:"🍑", unit:"g",   cal:0.44, pro:0.011,fat:0.003,carb:0.106,fiber:0.017,vc:0.054,min:0, max:300, cat:"carb"},
+  {id:"berry",  name:"蓝莓",       icon:"🫐", unit:"g",   cal:0.57, pro:0.007,fat:0.003,carb:0.145,fiber:0.024,vc:0.097,min:0, max:200, cat:"carb"},
+  {id:"strawb", name:"草莓",       icon:"🍓", unit:"g",   cal:0.32, pro:0.007,fat:0.003,carb:0.077,fiber:0.02, vc:0.47, min:0, max:300, cat:"carb"},
+
+  // === 蔬菜 ===
+  {id:"broc",   name:"西兰花",     icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,vc:0.56, min:0, max:300, cat:"veggie"},
+  {id:"spinach",name:"菠菜",       icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,vc:0.28, min:0, max:200, cat:"veggie"},
+  {id:"tomato", name:"西红柿",     icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,vc:0.14, min:0, max:200, cat:"veggie"},
+  {id:"shiitake",name:"香菇",     icon:"🍄", unit:"g",   cal:0.19, pro:0.022,fat:0.003,carb:0.03, fiber:0.025,vc:0.01, min:0, max:200, cat:"veggie"},
+  {id:"okra",   name:"秋葵",       icon:"🫛", unit:"g",   cal:0.33, pro:0.019,fat:0.002,carb:0.075,fiber:0.032,vc:0.21, min:0, max:200, cat:"veggie"},
+  {id:"eggplant",name:"茄子",     icon:"🍆", unit:"g",   cal:0.23, pro:0.01, fat:0.002,carb:0.049,fiber:0.017,vc:0.03, min:0, max:300, cat:"veggie"},
+  {id:"kailan", name:"芥蓝",       icon:"🥬", unit:"g",   cal:0.19, pro:0.028,fat:0.004,carb:0.01, fiber:0.016,vc:0.76, min:0, max:250, cat:"veggie"},
+  {id:"choysum",name:"广式菜心",   icon:"🥬", unit:"g",   cal:0.15, pro:0.015,fat:0.002,carb:0.015,fiber:0.008,vc:0.45, min:0, max:250, cat:"veggie"},
+  {id:"fungus", name:"黑木耳",     icon:"🪸", unit:"g",   cal:0.21, pro:0.015,fat:0.002,carb:0.035,fiber:0.026,vc:0.01, min:0, max:100, cat:"veggie"},
+  {id:"kelp",   name:"海带",       icon:"🫧", unit:"g",   cal:0.12, pro:0.012,fat:0.001,carb:0.017,fiber:0.005,vc:0,    min:0, max:150, cat:"veggie"},
+  {id:"enoki",  name:"金针菇",     icon:"🍄", unit:"g",   cal:0.26, pro:0.027,fat:0.003,carb:0.035,fiber:0.027,vc:0.02, min:0, max:200, cat:"veggie"},
+
+  // === 奶制品 / 脂肪 / 混合 ===
+  {id:"milk",   name:"牛奶",       icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0,   vc:0,    min:0, max:400, cat:"dairy"},
+  {id:"yogurt", name:"希腊酸奶",   icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,   vc:0,    min:0, max:250, cat:"dairy"},
+  {id:"avocado",name:"牛油果",     icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,vc:0.10, min:0, max:150, cat:"fat"},
+  {id:"dumplin",name:"饺子",       icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5, vc:0,    min:0, max:10,  cat:"mixed"},
+  {id:"dessert",name:"甜品",       icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,vc:0,  min:0, max:100, cat:"treat"},
 ];
 
 let gender = 'male';
@@ -265,16 +307,16 @@ let activeTab = 'b';
 
 const PRESETS = {
   b: {
-    light:  ['egg','milk','oat','banana','yogurt','avocado'],
-    quick:  ['egg','milk','dumplin','baozi','oat','yogurt','tomato'],
+    light:  ['egg','milk','oat','banana','yogurt','avocado','berry','strawb'],
+    quick:  ['egg','milk','dumplin','oat','yogurt','tomato','apple','banana'],
   },
   l: {
-    highpro:['chicken','beef','salmon','shrimp','bbq','broc','tofu','rice'],
-    balanced:['rice','noodle','chicken','stirfry','tofu','broc','spinach','tomato'],
+    highpro:['chicken','beef','salmon','shrimp','pork','broc','tofu','rice'],
+    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan'],
   },
   d: {
-    lowcarb:['chicken','salmon','shrimp','beef','bbq','broc','spinach','tofu','tomato'],
-    light:  ['tofu','stirfry','broc','spinach','tomato','sweet','egg','shrimp'],
+    lowcarb:['chicken','salmon','shrimp','beef','tuna','broc','spinach','tofu','tomato','eggplant'],
+    light:  ['tofu','broc','spinach','tomato','sweet','egg','shrimp','okra','kelp','choysum'],
   }
 };
 
@@ -367,6 +409,7 @@ function calculate() {
   const targetPro = Math.round(wt * pref);
   const targetFat = Math.round(targetCal * 0.28 / 9);
   const targetCarb = Math.round((targetCal - targetPro * 4 - targetFat * 9) / 4);
+  const targetVC = 100; // 中国居民膳食推荐量
 
   document.getElementById('r-bmr').textContent = bmr;
   document.getElementById('r-tdee').textContent = tdee;
@@ -383,9 +426,12 @@ function calculate() {
   }
 
   const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, ratioStr);
+  const actualVC = +(meals.reduce((s, m) => s + m.totalVC, 0).toFixed(0));
+  document.getElementById('r-vc-actual').textContent = actualVC;
+  document.getElementById('r-vc-actual').style.color = actualVC >= 60 ? '#639922' : '#a32d2d';
   renderMeals(meals);
   renderCharts(meals, targetCal, targetPro, targetFat, targetCarb);
-  renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, wt);
+  renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, targetVC, wt);
 
   document.getElementById('result-area').classList.remove('hidden');
   document.getElementById('result-area').scrollIntoView({behavior:'smooth'});
@@ -495,7 +541,8 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
         itemCal: Math.round(p.food.cal * qty),
         itemPro: +(p.food.pro * qty).toFixed(1),
         itemFat: +(p.food.fat * qty).toFixed(1),
-        itemCarb: +(p.food.carb * qty).toFixed(1)
+        itemCarb: +(p.food.carb * qty).toFixed(1),
+        itemVC: +((p.food.vc || 0) * qty).toFixed(1)
       };
     }).filter(p => p.qty > 0);
 
@@ -536,8 +583,9 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, mealName) {
   const totalFat = +bestPlan.reduce((s, i) => s + i.itemFat, 0).toFixed(1);
   const totalCarb = +bestPlan.reduce((s, i) => s + i.itemCarb, 0).toFixed(1);
   const totalFiber = +bestPlan.reduce((s, i) => s + (i.fiber || 0) * i.qty, 0).toFixed(1);
+  const totalVC = +bestPlan.reduce((s, i) => s + i.itemVC, 0).toFixed(0);
 
-  return { name: mealName, items: bestPlan, totalCal, totalPro, totalFat, totalCarb, totalFiber };
+  return { name: mealName, items: bestPlan, totalCal, totalPro, totalFat, totalCarb, totalFiber, totalVC };
 }
 
 function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, ratios) {
@@ -576,7 +624,7 @@ function renderMeals(meals) {
     }).join('');
     div.innerHTML = `
       <div class="meal-title"><span class="dot ${dotClass[mi]}"></span>${meal.name}
-        <span style="font-size:12px;color:#888780;font-weight:400">共 ${meal.totalCal} kcal &nbsp;|&nbsp; 蛋白 ${meal.totalPro}g &nbsp;|&nbsp; 脂肪 ${meal.totalFat}g &nbsp;|&nbsp; 碳水 ${meal.totalCarb}g &nbsp;|&nbsp; 膳食纤维 ${meal.totalFiber}g</span>
+        <span style="font-size:12px;color:#888780;font-weight:400">共 ${meal.totalCal} kcal &nbsp;|&nbsp; 蛋白 ${meal.totalPro}g &nbsp;|&nbsp; 脂肪 ${meal.totalFat}g &nbsp;|&nbsp; 碳水 ${meal.totalCarb}g &nbsp;|&nbsp; 纤维 ${meal.totalFiber}g &nbsp;|&nbsp; VC ${meal.totalVC}mg</span>
       </div>
       ${rows}`;
     cont.appendChild(div);
@@ -635,12 +683,13 @@ function renderCharts(meals, targetCal, targetPro, targetFat, targetCarb) {
   });
 }
 
-function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, wt) {
+function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, targetVC, wt) {
   const totalCal = meals.reduce((s,m) => s + m.totalCal, 0);
   const totalPro = meals.reduce((s,m) => s + m.totalPro, 0);
   const totalFat = meals.reduce((s,m) => s + m.totalFat, 0);
   const totalCarb = meals.reduce((s,m) => s + m.totalCarb, 0);
   const totalFiber = meals.reduce((s,m) => s + m.totalFiber, 0);
+  const totalVC = meals.reduce((s,m) => s + m.totalVC, 0);
 
   const checks = [
     {name:'总热量', val: totalCal, min: targetCal*0.9, max: targetCal*1.1, unit:'kcal', target: targetCal},
@@ -648,6 +697,7 @@ function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb
     {name:'脂肪', val: totalFat, min: targetCal*0.2/9, max: targetCal*0.35/9, unit:'g', target: targetFat},
     {name:'碳水', val: totalCarb, min: 50, max: targetCal*0.6/4, unit:'g', target: targetCarb},
     {name:'膳食纤维', val: totalFiber, min: 14, max: 50, unit:'g', target: 25},
+    {name:'维生素C', val: totalVC, min: 60, max: 1000, unit:'mg', target: targetVC},
   ];
 
   const container = document.getElementById('nutrition-check');
@@ -673,6 +723,7 @@ function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb
   if (totalCal < 1000) warnings.push('热量过低（< 1000 kcal），有损伤代谢、营养不良风险，建议适当增加食物量。');
   if (totalFiber < 14) warnings.push('膳食纤维偏低，建议多选西兰花、菠菜、燕麦等富含纤维的食物。');
   if (totalFat < targetCal * 0.18 / 9) warnings.push('脂肪摄入过低，可能影响脂溶性维生素吸收，建议适当添加牛油果或鸡蛋。');
+  if (totalVC < 60) warnings.push('维生素C摄入不足（< 60mg），建议增加西兰花、芥蓝、草莓、荔枝等高VC食物。');
 
   if (warnings.length > 0) {
     html += '<div class="warn-box"><strong>营养警告</strong><ul style="margin-top:6px;padding-left:16px">' +
