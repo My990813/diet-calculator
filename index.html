@@ -464,7 +464,7 @@ function clampQty(food, rawQty, maxSingleCal) {
   return Math.max(0, qty);
 }
 
-function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, mealName) {
+function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, mealName, usedFoods = {}) {
   if (foodList.length < MIN_MEAL_FOODS) {
     // fallback: 食物太少，直接全用
     foodList = [...foodList];
@@ -575,13 +575,29 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
     // VC 奖励：达标给大分，不达标按比例给分
     const vcBonus = vcGoal > 0 ? Math.min(totalVC / vcGoal, 1.2) * 20 : 0;
 
+    // 跨餐惩罚：已在前面餐次用过的食物，当前餐再用要扣分
+    // 用量占该食物单次上限的比例越高，扣分越重 → 迫使算法分散到不同蛋白源/碳水源
+    let crossMealPenalty = 0;
+    const crossChecked = new Set();
+    for (const item of finalPlan) {
+      if (crossChecked.has(item.id)) continue;
+      crossChecked.add(item.id);
+      const priorUsage = usedFoods[item.id] || 0;
+      if (priorUsage > 0) {
+        const maxPerMeal = item.max || 999;
+        const usageRatio = Math.min(1, priorUsage / maxPerMeal);
+        crossMealPenalty += usageRatio * 60;
+      }
+    }
+
     const score = mandatoryBonus
+                + vcBonus
                 - Math.abs(totalC - calGoal) * 1.2
                 - Math.abs(totalP - proGoal) * 3
                 - Math.abs(totalCarb - carbGoal) * 2
                 - sameCatPenalty
                 + cats.size * 5
-                + vcBonus;
+                - crossMealPenalty;
 
     if (score > bestScore) {
       bestScore = score;
@@ -613,9 +629,24 @@ function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, t
   const lVC = Math.round(targetVC * ratios[1]);
   const dVC = targetVC - bVC - lVC;
 
-  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, bVC, '早餐');
-  const lunch     = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, lVC, '午餐');
-  const dinner    = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, dVC, '晚餐');
+  // === 跨餐食物追踪：顺序求解，避免同一食物在三餐重复出现 ===
+  // 原理：每餐独立 MC 采样时看不到其他餐选了啥 → 蛋白效率高的食物（如鸡蛋）
+  // 会被三餐同时选中。修复：早餐先解 → 记录已用食物 → 午餐/晚餐评分时对已用
+  // 食物加跨餐惩罚分，算法自然转向选择不同蛋白源/碳水源分散到各餐。
+  const usedFoods = {};  // { foodId: 前面餐次已用的总量 }
+
+  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, bVC, '早餐', usedFoods);
+  for (const item of breakfast.items) {
+    usedFoods[item.id] = (usedFoods[item.id] || 0) + item.qty;
+  }
+
+  const lunch = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, lVC, '午餐', usedFoods);
+  for (const item of lunch.items) {
+    usedFoods[item.id] = (usedFoods[item.id] || 0) + item.qty;
+  }
+
+  const dinner = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, dVC, '晚餐', usedFoods);
+
   return [breakfast, lunch, dinner];
 }
 
