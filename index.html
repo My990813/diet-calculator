@@ -476,8 +476,18 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
 
   for (let trial = 0; trial < MC_SAMPLES; trial++) {
     // === Step 1: 随机抽取 k 种食物（k = 3~7，越多样化越好） ===
+    // 跨餐偏见：前面餐次已用过的食物降低抽取概率，迫使算法探索不同食物
     const k = MIN_MEAL_FOODS + Math.floor(Math.random() * (MAX_MEAL_FOODS - MIN_MEAL_FOODS + 1));
-    const shuffled = [...foodList].sort(() => Math.random() - 0.5);
+    const weighted = [];
+    for (const f of foodList) {
+      const priorUsage = usedFoods[f.id] || 0;
+      const maxPerFood = f.max || 999;
+      const usageRatio = Math.min(1, priorUsage / Math.max(1, maxPerFood));
+      // 未用过的食物权重 3x，半用过的 2x，用满的 1x
+      const weight = Math.max(1, Math.round(3 * (1 - usageRatio)));
+      for (let w = 0; w < weight; w++) weighted.push(f);
+    }
+    const shuffled = [...weighted].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, Math.min(k, shuffled.length));
 
     // 强制确保有 蛋白源 + 碳水源 + 蔬菜（如果可选食物里有的话）
@@ -586,7 +596,7 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
       if (priorUsage > 0) {
         const maxPerMeal = item.max || 999;
         const usageRatio = Math.min(1, priorUsage / maxPerMeal);
-        crossMealPenalty += usageRatio * 60;
+        crossMealPenalty += usageRatio * 120;
       }
     }
 
