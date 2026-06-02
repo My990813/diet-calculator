@@ -258,6 +258,9 @@ const FOODS = [
   {id:"salmon", name:"三文鱼",     icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
   {id:"tuna",   name:"金枪鱼末",   icon:"🐟", unit:"g",   cal:1.16, pro:0.26, fat:0.008,carb:0,   fiber:0,   vc:0,    min:0, max:150, cat:"protein"},
   {id:"shrimp", name:"虾仁",       icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,   vc:0,    min:0, max:200, cat:"protein"},
+  {id:"grouper",name:"清蒸石斑鱼", icon:"🐠", unit:"g",   cal:1.05, pro:0.20, fat:0.025,carb:0,   fiber:0,   vc:0,    min:0, max:300, cat:"protein"},
+  {id:"clam",   name:"花蛤",       icon:"🦪", unit:"g",   cal:0.56, pro:0.076,fat:0.006,carb:0.022,fiber:0,  vc:0.13, min:0, max:300, cat:"protein"},
+  {id:"razor",  name:"蛏子",       icon:"🦪", unit:"g",   cal:0.48, pro:0.073,fat:0.005,carb:0.020,fiber:0,  vc:0.08, min:0, max:300, cat:"protein"},
   {id:"tofu",   name:"豆腐",       icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,vc:0,  min:0, max:300, cat:"protein"},
 
   // === 碳水源 ===
@@ -314,11 +317,11 @@ const PRESETS = {
     quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple'],
   },
   l: {
-    highpro:['chicken','beef','salmon','shrimp','pork','broc','tofu','rice'],
+    highpro:['chicken','beef','salmon','shrimp','pork','grouper','clam','razor','broc','tofu','rice'],
     balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn'],
   },
   d: {
-    lowcarb:['chicken','salmon','shrimp','beef','tuna','broc','spinach','tofu','tomato','eggplant'],
+    lowcarb:['chicken','salmon','shrimp','beef','tuna','grouper','clam','razor','broc','spinach','tofu','tomato','eggplant'],
     light:  ['tofu','broc','spinach','tomato','sweet','scorn','egg','shrimp','okra','kelp','choysum'],
   }
 };
