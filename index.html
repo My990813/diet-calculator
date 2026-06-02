@@ -521,7 +521,15 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
       for (let w = 0; w < weight; w++) weighted.push(f);
     }
     const shuffled = [...weighted].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, Math.min(k, shuffled.length));
+    // 去重：加权池中同一食物有多份副本，shuffle+slice 可能切到重复 → 按 food.id 唯一化
+    const seenIds = new Set();
+    const selected = [];
+    for (const f of shuffled) {
+      if (seenIds.has(f.id)) continue;
+      seenIds.add(f.id);
+      selected.push(f);
+      if (selected.length >= Math.min(k, availFoods.length)) break;
+    }
 
     // 强制确保有 蛋白源 + 碳水源 + 蔬菜（如果可选食物里有的话）
     const availCats = new Set(selected.map(f => f.cat));
