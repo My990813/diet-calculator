@@ -313,6 +313,7 @@ const FOODS = [
   {id:"yogurt", name:"希腊酸奶",   icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,   vc:0,    gi:0, min:0, max:250, cat:"dairy"},
   {id:"avocado",name:"牛油果",     icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,vc:0.10, gi:0, min:0, max:150, cat:"fat"},
   {id:"dumplin",name:"饺子",       icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5, vc:0,    gi:50, min:0, max:10,  cat:"mixed"},
+  {id:"baopork",name:"猪肉包子",   icon:"🥟", unit:"个",  cal:190,  pro:7,    fat:5,   carb:26,  fiber:1,   vc:0,    gi:66, min:0, max:4,   cat:"mixed"},
   {id:"dessert",name:"甜品",       icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,vc:0,  gi:70, min:0, max:80,  cat:"treat"},
 ];
 
@@ -324,12 +325,12 @@ let activeTab = 'b';
 
 const PRESETS = {
   b: {
-    light:  ['egg','milk','bread','banana','yogurt','avocado','berry','strawb','scorn','mantou','porridg','millet'],
-    quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple','mantou','porridg'],
+    light:  ['egg','milk','bread','banana','yogurt','avocado','berry','strawb','scorn','mantou','porridg','millet','baopork'],
+    quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple','mantou','porridg','baopork'],
   },
   l: {
-    highpro:['chicken','beef','salmon','shrimp','pork','grouper','clam','razor','broc','tofu','rice','potato','pumpkin'],
-    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn','potato','pumpkin'],
+    highpro:['chicken','beef','salmon','shrimp','pork','grouper','clam','razor','broc','tofu','rice','potato','pumpkin','baopork'],
+    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn','potato','pumpkin','baopork'],
   },
   d: {
     lowcarb:['chicken','salmon','shrimp','beef','tuna','grouper','clam','razor','broc','spinach','tofu','tomato','eggplant','pumpkin'],
