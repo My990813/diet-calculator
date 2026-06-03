@@ -300,6 +300,13 @@ const FOODS = [
   {id:"fungus", name:"黑木耳",     icon:"🪸", unit:"g",   cal:0.21, pro:0.015,fat:0.002,carb:0.035,fiber:0.026,vc:0.01, gi:0, min:0, max:100, cat:"veggie"},
   {id:"kelp",   name:"海带",       icon:"🫧", unit:"g",   cal:0.12, pro:0.012,fat:0.001,carb:0.017,fiber:0.005,vc:0,   gi:0, min:0, max:150, cat:"veggie"},
   {id:"enoki",  name:"金针菇",     icon:"🍄", unit:"g",   cal:0.26, pro:0.027,fat:0.003,carb:0.035,fiber:0.027,vc:0.02, gi:0, min:0, max:200, cat:"veggie"},
+  {id:"pumpkin",name:"南瓜",       icon:"🎃", unit:"g",   cal:0.22, pro:0.01, fat:0.001,carb:0.05, fiber:0.01, vc:0.09, gi:65, min:0, max:300, cat:"veggie"},
+
+  // === 碳水源（续） ===
+  {id:"potato", name:"土豆",       icon:"🥔", unit:"g",   cal:0.81, pro:0.02, fat:0.001,carb:0.18, fiber:0.01, vc:0.20, gi:62, min:0, max:300, cat:"carb"},
+  {id:"mantou", name:"馒头",       icon:"🥯", unit:"g",   cal:2.23, pro:0.07, fat:0.01, carb:0.44, fiber:0.01, vc:0,    gi:88, min:0, max:200, cat:"carb"},
+  {id:"porridg",name:"白粥",       icon:"🥣", unit:"g",   cal:0.46, pro:0.01, fat:0.003,carb:0.10, fiber:0.002,vc:0,   gi:82, min:0, max:400, cat:"carb"},
+  {id:"millet", name:"小米粥",     icon:"🥣", unit:"g",   cal:0.46, pro:0.014,fat:0.007,carb:0.08, fiber:0.005,vc:0,   gi:60, min:0, max:400, cat:"carb"},
 
   // === 奶制品 / 脂肪 / 混合 ===
   {id:"milk",   name:"牛奶",       icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0,   vc:0,    gi:0, min:0, max:400, cat:"dairy"},
@@ -317,16 +324,16 @@ let activeTab = 'b';
 
 const PRESETS = {
   b: {
-    light:  ['egg','milk','bread','banana','yogurt','avocado','berry','strawb','scorn'],
-    quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple'],
+    light:  ['egg','milk','bread','banana','yogurt','avocado','berry','strawb','scorn','mantou','porridg','millet'],
+    quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple','mantou','porridg'],
   },
   l: {
-    highpro:['chicken','beef','salmon','shrimp','pork','grouper','clam','razor','broc','tofu','rice'],
-    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn'],
+    highpro:['chicken','beef','salmon','shrimp','pork','grouper','clam','razor','broc','tofu','rice','potato','pumpkin'],
+    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn','potato','pumpkin'],
   },
   d: {
-    lowcarb:['chicken','salmon','shrimp','beef','tuna','grouper','clam','razor','broc','spinach','tofu','tomato','eggplant'],
-    light:  ['tofu','broc','spinach','tomato','sweet','scorn','egg','shrimp','okra','kelp','choysum'],
+    lowcarb:['chicken','salmon','shrimp','beef','tuna','grouper','clam','razor','broc','spinach','tofu','tomato','eggplant','pumpkin'],
+    light:  ['tofu','broc','spinach','tomato','sweet','scorn','egg','shrimp','okra','kelp','choysum','potato','pumpkin'],
   }
 };
 
@@ -487,7 +494,7 @@ function clampQty(food, rawQty, maxSingleCal) {
   const gi = food.gi || 0;
   // 主食类（白米饭、面条等）虽 GI 偏高但作为正常主食不受 GI 限流，
   // GI 限流针对的是「非主食的高 GI 食物」如荔枝、糯玉米、面包、甜品类
-  const GI_CLAMP_EXEMPT = new Set(['rice', 'noodle']);
+  const GI_CLAMP_EXEMPT = new Set(['rice', 'noodle', 'mantou']);
   if (gi >= 70 && !GI_CLAMP_EXEMPT.has(food.id)) {
     // 高 GI（≥70）：严格限流，如 荔枝70、糯玉米75、西瓜72、面包70、甜品70
     maxByGi = food.unit === '个' ? 1 : 100;
