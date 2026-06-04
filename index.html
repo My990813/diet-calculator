@@ -202,14 +202,26 @@ input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
       </div>
       <div class="grid2" style="margin-top:12px">
         <div class="metric-card">
-          <div class="metric-label">维生素C目标</div>
-          <div class="metric-value" id="r-vc">100</div>
-          <div class="metric-unit">mg / 天（中国居民推荐量）</div>
+          <div class="metric-label">维生素C目标 / 实际</div>
+          <div class="metric-value"><span id="r-vc">100</span> / <span id="r-vc-actual">—</span></div>
+          <div class="metric-unit">mg / 天</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">实际摄入VC</div>
-          <div class="metric-value" id="r-vc-actual">—</div>
+          <div class="metric-label">叶酸 目标 / 实际</div>
+          <div class="metric-value"><span id="r-folate">400</span> / <span id="r-folate-actual">—</span></div>
+          <div class="metric-unit">μg / 天</div>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="metric-card">
+          <div class="metric-label">钙 目标 / 实际</div>
+          <div class="metric-value"><span id="r-ca">800</span> / <span id="r-ca-actual">—</span></div>
           <div class="metric-unit">mg / 天</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">维生素K 目标 / 实际</div>
+          <div class="metric-value"><span id="r-vk">80</span> / <span id="r-vk-actual">—</span></div>
+          <div class="metric-unit">μg / 天</div>
         </div>
       </div>
       <div id="r-tip" class="ok-box" style="margin-top:12px"></div>
@@ -247,74 +259,73 @@ input[type=number]:focus,select:focus{border-color:rgba(52,138,221,0.6)}
 
 <script>
 // cat: 'protein' 蛋白源 | 'carb' 碳水源 | 'mixed' 混合 | 'veggie' 蔬菜 | 'dairy' 奶制品 | 'fat' 脂肪源 | 'treat' 高热量零食
-// vc: 维生素C mg/单位（g表示每克，个表示每个，ml表示每毫升）
-// gi: 升糖指数 0~100，0=无升糖影响（蛋白质/蔬菜/脂肪），>0 用于分量控制（≥70高GI限100g，56-69中GI限200g）
+// vc: 维生素C mg/单位 | gi: 升糖指数 | folate: 叶酸 μg/单位 | calcium: 钙 mg/单位 | vk: 维生素K μg/单位
 const FOODS = [
   // === 蛋白源 ===
-  {id:"egg",    name:"鸡蛋",       icon:"🥚", unit:"个",  cal:70,   pro:6,    fat:5,   carb:0.6, fiber:0,   vc:0,    gi:0, min:0, max:3,   cat:"protein"},
-  {id:"chicken",name:"鸡胸肉",     icon:"🍗", unit:"g",   cal:1.65, pro:0.23, fat:0.035,carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:300, cat:"protein"},
-  {id:"chickth",name:"去皮鸡腿肉", icon:"🍗", unit:"g",   cal:1.19, pro:0.205,fat:0.038,carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:300, cat:"protein"},
-  {id:"beef",   name:"牛肉片",     icon:"🥩", unit:"g",   cal:2.5,  pro:0.21, fat:0.15, carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:200, cat:"protein"},
-  {id:"pork",   name:"猪肉（瘦）", icon:"🥩", unit:"g",   cal:1.43, pro:0.20, fat:0.062,carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:200, cat:"protein"},
-  {id:"lamb",   name:"羊排",       icon:"🍖", unit:"g",   cal:2.0,  pro:0.18, fat:0.14, carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:200, cat:"protein"},
-  {id:"duck",   name:"去皮鸭肉",   icon:"🦆", unit:"g",   cal:1.36, pro:0.185,fat:0.06, carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:200, cat:"protein"},
-  {id:"goose",  name:"去皮鹅肉",   icon:"🦆", unit:"g",   cal:1.61, pro:0.22, fat:0.07, carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:200, cat:"protein"},
-  {id:"salmon", name:"三文鱼",     icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:200, cat:"protein"},
-  {id:"tuna",   name:"金枪鱼末",   icon:"🐟", unit:"g",   cal:1.16, pro:0.26, fat:0.008,carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:150, cat:"protein"},
-  {id:"shrimp", name:"虾仁",       icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:200, cat:"protein"},
-  {id:"grouper",name:"清蒸石斑鱼", icon:"🐠", unit:"g",   cal:1.05, pro:0.20, fat:0.025,carb:0,   fiber:0,   vc:0,    gi:0, min:0, max:300, cat:"protein"},
-  {id:"clam",   name:"花蛤",       icon:"🦪", unit:"g",   cal:0.56, pro:0.076,fat:0.006,carb:0.022,fiber:0,  vc:0.13, gi:0, min:0, max:300, cat:"protein"},
-  {id:"razor",  name:"蛏子",       icon:"🦪", unit:"g",   cal:0.48, pro:0.073,fat:0.005,carb:0.020,fiber:0,  vc:0.08, gi:0, min:0, max:300, cat:"protein"},
-  {id:"tofu",   name:"豆腐",       icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,vc:0,  gi:0, min:0, max:300, cat:"protein"},
+  {id:"egg",    name:"鸡蛋",       icon:"🥚", unit:"个",  cal:70,   pro:6,    fat:5,   carb:0.6, fiber:0,   vc:0,    gi:0, folate:22,  calcium:28,  vk:0.3, min:0, max:3,   cat:"protein"},
+  {id:"chicken",name:"鸡胸肉",     icon:"🍗", unit:"g",   cal:1.65, pro:0.23, fat:0.035,carb:0,   fiber:0,   vc:0,    gi:0, folate:0.01,calcium:0.03,vk:0,   min:0, max:300, cat:"protein"},
+  {id:"chickth",name:"去皮鸡腿肉", icon:"🍗", unit:"g",   cal:1.19, pro:0.205,fat:0.038,carb:0,   fiber:0,   vc:0,    gi:0, folate:0.01,calcium:0.04,vk:0,   min:0, max:300, cat:"protein"},
+  {id:"beef",   name:"牛肉片",     icon:"🥩", unit:"g",   cal:2.5,  pro:0.21, fat:0.15, carb:0,   fiber:0,   vc:0,    gi:0, folate:0.02,calcium:0.04,vk:0.01,min:0, max:200, cat:"protein"},
+  {id:"pork",   name:"猪肉（瘦）", icon:"🥩", unit:"g",   cal:1.43, pro:0.20, fat:0.062,carb:0,   fiber:0,   vc:0,    gi:0, folate:0.01,calcium:0.03,vk:0,   min:0, max:200, cat:"protein"},
+  {id:"lamb",   name:"羊排",       icon:"🍖", unit:"g",   cal:2.0,  pro:0.18, fat:0.14, carb:0,   fiber:0,   vc:0,    gi:0, folate:0.02,calcium:0.05,vk:0,   min:0, max:200, cat:"protein"},
+  {id:"duck",   name:"去皮鸭肉",   icon:"🦆", unit:"g",   cal:1.36, pro:0.185,fat:0.06, carb:0,   fiber:0,   vc:0,    gi:0, folate:0.02,calcium:0.04,vk:0,   min:0, max:200, cat:"protein"},
+  {id:"goose",  name:"去皮鹅肉",   icon:"🦆", unit:"g",   cal:1.61, pro:0.22, fat:0.07, carb:0,   fiber:0,   vc:0,    gi:0, folate:0.02,calcium:0.05,vk:0,   min:0, max:200, cat:"protein"},
+  {id:"salmon", name:"三文鱼",     icon:"🐟", unit:"g",   cal:2.08, pro:0.199,fat:0.126,carb:0,   fiber:0,   vc:0,    gi:0, folate:0.05,calcium:0.07,vk:0,   min:0, max:200, cat:"protein"},
+  {id:"tuna",   name:"金枪鱼末",   icon:"🐟", unit:"g",   cal:1.16, pro:0.26, fat:0.008,carb:0,   fiber:0,   vc:0,    gi:0, folate:0.02,calcium:0.06,vk:0,   min:0, max:150, cat:"protein"},
+  {id:"shrimp", name:"虾仁",       icon:"🍤", unit:"g",   cal:0.99, pro:0.237,fat:0.003,carb:0,   fiber:0,   vc:0,    gi:0, folate:0.01,calcium:0.35,vk:0,   min:0, max:200, cat:"protein"},
+  {id:"grouper",name:"清蒸石斑鱼", icon:"🐠", unit:"g",   cal:1.05, pro:0.20, fat:0.025,carb:0,   fiber:0,   vc:0,    gi:0, folate:0.02,calcium:0.15,vk:0,   min:0, max:300, cat:"protein"},
+  {id:"clam",   name:"花蛤",       icon:"🦪", unit:"g",   cal:0.56, pro:0.076,fat:0.006,carb:0.022,fiber:0,  vc:0.13, gi:0, folate:0.05,calcium:0.30,vk:0,   min:0, max:300, cat:"protein"},
+  {id:"razor",  name:"蛏子",       icon:"🦪", unit:"g",   cal:0.48, pro:0.073,fat:0.005,carb:0.020,fiber:0,  vc:0.08, gi:0, folate:0.04,calcium:0.35,vk:0,   min:0, max:300, cat:"protein"},
+  {id:"tofu",   name:"豆腐",       icon:"🫘", unit:"g",   cal:0.76, pro:0.081,fat:0.046,carb:0.018,fiber:0.003,vc:0,  gi:0, folate:0.15,calcium:1.05,vk:0.02,min:0, max:300, cat:"protein"},
 
   // === 碳水源 ===
-  {id:"rice",   name:"白米饭",     icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,vc:0, gi:73, min:0, max:400, cat:"carb"},
-  {id:"noodle", name:"面条",       icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01, vc:0, gi:55, min:0, max:300, cat:"carb"},
-  {id:"sweet",  name:"红薯",       icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, vc:0.24, gi:54, min:0, max:300, cat:"carb"},
-  {id:"scorn",  name:"甜玉米",     icon:"🌽", unit:"g",   cal:0.86, pro:0.032,fat:0.012,carb:0.190,fiber:0.027,vc:0.068,gi:55, min:0, max:300, cat:"carb"},
-  {id:"wcorns", name:"糯玉米",     icon:"🌽", unit:"g",   cal:1.40, pro:0.045,fat:0.016,carb:0.290,fiber:0.023,vc:0,   gi:75, min:0, max:200, cat:"carb"},
-  {id:"oat",    name:"燕麦片",     icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,vc:0, gi:55, min:0, max:100, cat:"carb"},
-  {id:"bread",  name:"无糖少油面包", icon:"🍞", unit:"g", cal:2.65, pro:0.09, fat:0.04, carb:0.48, fiber:0.03, vc:0, gi:70, min:0, max:150, cat:"carb"},
-  {id:"banana", name:"香蕉",       icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,vc:0.087,gi:52, min:0, max:200, cat:"carb"},
-  {id:"apple",  name:"苹果",       icon:"🍎", unit:"g",   cal:0.53, pro:0.002,fat:0.002,carb:0.135,fiber:0.024,vc:0.03, gi:36, min:0, max:300, cat:"carb"},
-  {id:"pear",   name:"梨子",       icon:"🍐", unit:"g",   cal:0.51, pro:0.003,fat:0.002,carb:0.131,fiber:0.031,vc:0.04, gi:33, min:0, max:300, cat:"carb"},
-  {id:"grape",  name:"葡萄",       icon:"🍇", unit:"g",   cal:0.69, pro:0.007,fat:0.002,carb:0.181,fiber:0.009,vc:0.032,gi:53, min:0, max:200, cat:"carb"},
-  {id:"raisin", name:"提子",       icon:"🍇", unit:"g",   cal:0.43, pro:0.005,fat:0.002,carb:0.103,fiber:0.006,vc:0.25, gi:56, min:0, max:200, cat:"carb"},
-  {id:"mango",  name:"芒果",       icon:"🥭", unit:"g",   cal:0.60, pro:0.008,fat:0.004,carb:0.15, fiber:0.016,vc:0.364,gi:51, min:0, max:300, cat:"carb"},
-  {id:"lychee", name:"荔枝",       icon:"🫐", unit:"g",   cal:0.66, pro:0.008,fat:0.004,carb:0.165,fiber:0.013,vc:0.715,gi:70, min:0, max:100, cat:"carb"},
-  {id:"pineapp",name:"菠萝",       icon:"🍍", unit:"g",   cal:0.41, pro:0.005,fat:0.001,carb:0.108,fiber:0.013,vc:0.18, gi:66, min:0, max:300, cat:"carb"},
-  {id:"melon",  name:"西瓜",       icon:"🍉", unit:"g",   cal:0.31, pro:0.006,fat:0.001,carb:0.068,fiber:0.004,vc:0.081,gi:72, min:0, max:250, cat:"carb"},
-  {id:"nectar", name:"油桃",       icon:"🍑", unit:"g",   cal:0.44, pro:0.011,fat:0.003,carb:0.106,fiber:0.017,vc:0.054,gi:43, min:0, max:300, cat:"carb"},
-  {id:"berry",  name:"蓝莓",       icon:"🫐", unit:"g",   cal:0.57, pro:0.007,fat:0.003,carb:0.145,fiber:0.024,vc:0.097,gi:53, min:0, max:200, cat:"carb"},
-  {id:"strawb", name:"草莓",       icon:"🍓", unit:"g",   cal:0.32, pro:0.007,fat:0.003,carb:0.077,fiber:0.02, vc:0.47, gi:40, min:0, max:300, cat:"carb"},
+  {id:"rice",   name:"白米饭",     icon:"🍚", unit:"g",   cal:1.16, pro:0.026,fat:0.003,carb:0.257,fiber:0.003,vc:0, gi:73, folate:0.03,calcium:0.03,vk:0,   min:0, max:400, cat:"carb"},
+  {id:"noodle", name:"面条",       icon:"🍜", unit:"g",   cal:1.36, pro:0.05, fat:0.01, carb:0.28, fiber:0.01, vc:0, gi:55, folate:0.05,calcium:0.06,vk:0,   min:0, max:300, cat:"carb"},
+  {id:"sweet",  name:"红薯",       icon:"🍠", unit:"g",   cal:0.86, pro:0.016,fat:0.001,carb:0.201,fiber:0.03, vc:0.24, gi:54, folate:0.11,calcium:0.30,vk:0.02,min:0, max:300, cat:"carb"},
+  {id:"scorn",  name:"甜玉米",     icon:"🌽", unit:"g",   cal:0.86, pro:0.032,fat:0.012,carb:0.190,fiber:0.027,vc:0.068,gi:55, folate:0.19,calcium:0.02,vk:0,   min:0, max:300, cat:"carb"},
+  {id:"wcorns", name:"糯玉米",     icon:"🌽", unit:"g",   cal:1.40, pro:0.045,fat:0.016,carb:0.290,fiber:0.023,vc:0,   gi:75, folate:0.15,calcium:0.02,vk:0,   min:0, max:200, cat:"carb"},
+  {id:"oat",    name:"燕麦片",     icon:"🌾", unit:"g",   cal:3.89, pro:0.168,fat:0.072,carb:0.660,fiber:0.107,vc:0, gi:55, folate:0.56,calcium:0.54,vk:0.02,min:0, max:100, cat:"carb"},
+  {id:"bread",  name:"无糖少油面包", icon:"🍞", unit:"g", cal:2.65, pro:0.09, fat:0.04, carb:0.48, fiber:0.03, vc:0, gi:70, folate:0.08,calcium:0.15,vk:0,   min:0, max:150, cat:"carb"},
+  {id:"banana", name:"香蕉",       icon:"🍌", unit:"g",   cal:0.89, pro:0.011,fat:0.003,carb:0.228,fiber:0.026,vc:0.087,gi:52, folate:0.20,calcium:0.05,vk:0.01,min:0, max:200, cat:"carb"},
+  {id:"apple",  name:"苹果",       icon:"🍎", unit:"g",   cal:0.53, pro:0.002,fat:0.002,carb:0.135,fiber:0.024,vc:0.03, gi:36, folate:0.03,calcium:0.06,vk:0.02,min:0, max:300, cat:"carb"},
+  {id:"pear",   name:"梨子",       icon:"🍐", unit:"g",   cal:0.51, pro:0.003,fat:0.002,carb:0.131,fiber:0.031,vc:0.04, gi:33, folate:0.07,calcium:0.04,vk:0.05,min:0, max:300, cat:"carb"},
+  {id:"grape",  name:"葡萄",       icon:"🍇", unit:"g",   cal:0.69, pro:0.007,fat:0.002,carb:0.181,fiber:0.009,vc:0.032,gi:53, folate:0.02,calcium:0.10,vk:0.15,min:0, max:200, cat:"carb"},
+  {id:"raisin", name:"提子",       icon:"🍇", unit:"g",   cal:0.43, pro:0.005,fat:0.002,carb:0.103,fiber:0.006,vc:0.25, gi:56, folate:0.10,calcium:0.14,vk:0.15,min:0, max:200, cat:"carb"},
+  {id:"mango",  name:"芒果",       icon:"🥭", unit:"g",   cal:0.60, pro:0.008,fat:0.004,carb:0.15, fiber:0.016,vc:0.364,gi:51, folate:0.14,calcium:0.10,vk:0.04,min:0, max:300, cat:"carb"},
+  {id:"lychee", name:"荔枝",       icon:"🫐", unit:"g",   cal:0.66, pro:0.008,fat:0.004,carb:0.165,fiber:0.013,vc:0.715,gi:70, folate:0.14,calcium:0.05,vk:0,   min:0, max:100, cat:"carb"},
+  {id:"pineapp",name:"菠萝",       icon:"🍍", unit:"g",   cal:0.41, pro:0.005,fat:0.001,carb:0.108,fiber:0.013,vc:0.18, gi:66, folate:0.15,calcium:0.13,vk:0.01,min:0, max:300, cat:"carb"},
+  {id:"melon",  name:"西瓜",       icon:"🍉", unit:"g",   cal:0.31, pro:0.006,fat:0.001,carb:0.068,fiber:0.004,vc:0.081,gi:72, folate:0.03,calcium:0.07,vk:0,   min:0, max:250, cat:"carb"},
+  {id:"nectar", name:"油桃",       icon:"🍑", unit:"g",   cal:0.44, pro:0.011,fat:0.003,carb:0.106,fiber:0.017,vc:0.054,gi:43, folate:0.05,calcium:0.06,vk:0.03,min:0, max:300, cat:"carb"},
+  {id:"berry",  name:"蓝莓",       icon:"🫐", unit:"g",   cal:0.57, pro:0.007,fat:0.003,carb:0.145,fiber:0.024,vc:0.097,gi:53, folate:0.06,calcium:0.06,vk:0.19,min:0, max:200, cat:"carb"},
+  {id:"strawb", name:"草莓",       icon:"🍓", unit:"g",   cal:0.32, pro:0.007,fat:0.003,carb:0.077,fiber:0.02, vc:0.47, gi:40, folate:0.24,calcium:0.16,vk:0.02,min:0, max:300, cat:"carb"},
 
   // === 蔬菜 ===
-  {id:"broc",   name:"西兰花",     icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,vc:0.56, gi:0, min:0, max:300, cat:"veggie"},
-  {id:"spinach",name:"菠菜",       icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,vc:0.28, gi:0, min:0, max:200, cat:"veggie"},
-  {id:"tomato", name:"西红柿",     icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,vc:0.14, gi:0, min:0, max:200, cat:"veggie"},
-  {id:"shiitake",name:"香菇",     icon:"🍄", unit:"g",   cal:0.19, pro:0.022,fat:0.003,carb:0.03, fiber:0.025,vc:0.01, gi:0, min:0, max:200, cat:"veggie"},
-  {id:"okra",   name:"秋葵",       icon:"🫛", unit:"g",   cal:0.33, pro:0.019,fat:0.002,carb:0.075,fiber:0.032,vc:0.21, gi:0, min:0, max:200, cat:"veggie"},
-  {id:"eggplant",name:"茄子",     icon:"🍆", unit:"g",   cal:0.23, pro:0.01, fat:0.002,carb:0.049,fiber:0.017,vc:0.03, gi:0, min:0, max:300, cat:"veggie"},
-  {id:"kailan", name:"芥蓝",       icon:"🥬", unit:"g",   cal:0.19, pro:0.028,fat:0.004,carb:0.01, fiber:0.016,vc:0.76, gi:0, min:0, max:250, cat:"veggie"},
-  {id:"choysum",name:"广式菜心",   icon:"🥬", unit:"g",   cal:0.15, pro:0.015,fat:0.002,carb:0.015,fiber:0.008,vc:0.45, gi:0, min:0, max:250, cat:"veggie"},
-  {id:"fungus", name:"黑木耳",     icon:"🪸", unit:"g",   cal:0.21, pro:0.015,fat:0.002,carb:0.035,fiber:0.026,vc:0.01, gi:0, min:0, max:100, cat:"veggie"},
-  {id:"kelp",   name:"海带",       icon:"🫧", unit:"g",   cal:0.12, pro:0.012,fat:0.001,carb:0.017,fiber:0.005,vc:0,   gi:0, min:0, max:150, cat:"veggie"},
-  {id:"enoki",  name:"金针菇",     icon:"🍄", unit:"g",   cal:0.26, pro:0.027,fat:0.003,carb:0.035,fiber:0.027,vc:0.02, gi:0, min:0, max:200, cat:"veggie"},
-  {id:"pumpkin",name:"南瓜",       icon:"🎃", unit:"g",   cal:0.22, pro:0.01, fat:0.001,carb:0.05, fiber:0.01, vc:0.09, gi:65, min:0, max:300, cat:"veggie"},
+  {id:"broc",   name:"西兰花",     icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,vc:0.56, gi:0, folate:0.63,calcium:0.47,vk:1.02,min:0, max:300, cat:"veggie"},
+  {id:"spinach",name:"菠菜",       icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,vc:0.28, gi:0, folate:1.94,calcium:0.99,vk:4.83,min:0, max:200, cat:"veggie"},
+  {id:"tomato", name:"西红柿",     icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,vc:0.14, gi:0, folate:0.15,calcium:0.10,vk:0.08,min:0, max:200, cat:"veggie"},
+  {id:"shiitake",name:"香菇",     icon:"🍄", unit:"g",   cal:0.19, pro:0.022,fat:0.003,carb:0.03, fiber:0.025,vc:0.01, gi:0, folate:0.25,calcium:0.02,vk:0,   min:0, max:200, cat:"veggie"},
+  {id:"okra",   name:"秋葵",       icon:"🫛", unit:"g",   cal:0.33, pro:0.019,fat:0.002,carb:0.075,fiber:0.032,vc:0.21, gi:0, folate:0.60,calcium:0.82,vk:0.31,min:0, max:200, cat:"veggie"},
+  {id:"eggplant",name:"茄子",     icon:"🍆", unit:"g",   cal:0.23, pro:0.01, fat:0.002,carb:0.049,fiber:0.017,vc:0.03, gi:0, folate:0.14,calcium:0.09,vk:0.04,min:0, max:300, cat:"veggie"},
+  {id:"kailan", name:"芥蓝",       icon:"🥬", unit:"g",   cal:0.19, pro:0.028,fat:0.004,carb:0.01, fiber:0.016,vc:0.76, gi:0, folate:1.00,calcium:1.10,vk:3.50,min:0, max:250, cat:"veggie"},
+  {id:"choysum",name:"广式菜心",   icon:"🥬", unit:"g",   cal:0.15, pro:0.015,fat:0.002,carb:0.015,fiber:0.008,vc:0.45, gi:0, folate:0.55,calcium:1.05,vk:2.50,min:0, max:250, cat:"veggie"},
+  {id:"fungus", name:"黑木耳",     icon:"🪸", unit:"g",   cal:0.21, pro:0.015,fat:0.002,carb:0.035,fiber:0.026,vc:0.01, gi:0, folate:0.30,calcium:0.57,vk:0,   min:0, max:100, cat:"veggie"},
+  {id:"kelp",   name:"海带",       icon:"🫧", unit:"g",   cal:0.12, pro:0.012,fat:0.001,carb:0.017,fiber:0.005,vc:0,   gi:0, folate:0.35,calcium:1.50,vk:0.30,min:0, max:150, cat:"veggie"},
+  {id:"enoki",  name:"金针菇",     icon:"🍄", unit:"g",   cal:0.26, pro:0.027,fat:0.003,carb:0.035,fiber:0.027,vc:0.02, gi:0, folate:0.20,calcium:0.01,vk:0,   min:0, max:200, cat:"veggie"},
+  {id:"pumpkin",name:"南瓜",       icon:"🎃", unit:"g",   cal:0.22, pro:0.01, fat:0.001,carb:0.05, fiber:0.01, vc:0.09, gi:65, folate:0.12,calcium:0.21,vk:0.01,min:0, max:300, cat:"veggie"},
 
   // === 碳水源（续） ===
-  {id:"potato", name:"土豆",       icon:"🥔", unit:"g",   cal:0.81, pro:0.02, fat:0.001,carb:0.18, fiber:0.01, vc:0.20, gi:62, min:0, max:300, cat:"carb"},
-  {id:"mantou", name:"馒头",       icon:"🥯", unit:"g",   cal:2.23, pro:0.07, fat:0.01, carb:0.44, fiber:0.01, vc:0,    gi:88, min:0, max:200, cat:"carb"},
-  {id:"porridg",name:"白粥",       icon:"🥣", unit:"g",   cal:0.46, pro:0.01, fat:0.003,carb:0.10, fiber:0.002,vc:0,   gi:82, min:0, max:400, cat:"carb"},
-  {id:"millet", name:"小米粥",     icon:"🥣", unit:"g",   cal:0.46, pro:0.014,fat:0.007,carb:0.08, fiber:0.005,vc:0,   gi:60, min:0, max:400, cat:"carb"},
+  {id:"potato", name:"土豆",       icon:"🥔", unit:"g",   cal:0.81, pro:0.02, fat:0.001,carb:0.18, fiber:0.01, vc:0.20, gi:62, folate:0.16,calcium:0.12,vk:0.02,min:0, max:300, cat:"carb"},
+  {id:"mantou", name:"馒头",       icon:"🥯", unit:"g",   cal:2.23, pro:0.07, fat:0.01, carb:0.44, fiber:0.01, vc:0,    gi:88, folate:0.05,calcium:0.10,vk:0,   min:0, max:200, cat:"carb"},
+  {id:"porridg",name:"白粥",       icon:"🥣", unit:"g",   cal:0.46, pro:0.01, fat:0.003,carb:0.10, fiber:0.002,vc:0,   gi:82, folate:0.02,calcium:0.05,vk:0,   min:0, max:400, cat:"carb"},
+  {id:"millet", name:"小米粥",     icon:"🥣", unit:"g",   cal:0.46, pro:0.014,fat:0.007,carb:0.08, fiber:0.005,vc:0,   gi:60, folate:0.10,calcium:0.08,vk:0.01,min:0, max:400, cat:"carb"},
 
   // === 奶制品 / 脂肪 / 混合 ===
-  {id:"milk",   name:"牛奶",       icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0,   vc:0,    gi:0, min:0, max:400, cat:"dairy"},
-  {id:"yogurt", name:"希腊酸奶",   icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,   vc:0,    gi:0, min:0, max:250, cat:"dairy"},
-  {id:"avocado",name:"牛油果",     icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,vc:0.10, gi:0, min:0, max:150, cat:"fat"},
-  {id:"dumplin",name:"饺子",       icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5, vc:0,    gi:50, min:0, max:10,  cat:"mixed"},
-  {id:"baopork",name:"猪肉包子",   icon:"🥟", unit:"个",  cal:190,  pro:7,    fat:5,   carb:26,  fiber:1,   vc:0,    gi:66, min:0, max:4,   cat:"mixed"},
-  {id:"dessert",name:"甜品",       icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,vc:0,  gi:70, min:0, max:80,  cat:"treat"},
+  {id:"milk",   name:"牛奶",       icon:"🥛", unit:"ml",  cal:0.6,  pro:0.033,fat:0.033,carb:0.048,fiber:0,   vc:0,    gi:0, folate:0.05,calcium:1.13,vk:0,   min:0, max:400, cat:"dairy"},
+  {id:"yogurt", name:"希腊酸奶",   icon:"🫙", unit:"g",   cal:0.59, pro:0.1,  fat:0.009,carb:0.036,fiber:0,   vc:0,    gi:0, folate:0.07,calcium:1.10,vk:0,   min:0, max:250, cat:"dairy"},
+  {id:"avocado",name:"牛油果",     icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,vc:0.10, gi:0, folate:0.81,calcium:0.13,vk:0.21,min:0, max:150, cat:"fat"},
+  {id:"dumplin",name:"饺子",       icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5, vc:0,    gi:50, folate:18,  calcium:30,  vk:3,   min:0, max:10,  cat:"mixed"},
+  {id:"baopork",name:"猪肉包子",   icon:"🥟", unit:"个",  cal:190,  pro:7,    fat:5,   carb:26,  fiber:1,   vc:0,    gi:66, folate:20,  calcium:25,  vk:3,   min:0, max:4,   cat:"mixed"},
+  {id:"dessert",name:"甜品",       icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,vc:0,  gi:70, folate:0.02,calcium:0.20,vk:0.01,min:0, max:80,  cat:"treat"},
 ];
 
 let gender = 'male';
@@ -427,7 +438,10 @@ function calculate() {
   const targetPro = Math.round(wt * pref);
   const targetFat = Math.round(targetCal * 0.28 / 9);
   const targetCarb = Math.round((targetCal - targetPro * 4 - targetFat * 9) / 4);
-  const targetVC = 100; // 中国居民膳食推荐量
+  const targetVC = 100;    // 维生素C：中国居民膳食推荐量 100mg/天
+  const targetFolate = 400; // 叶酸：中国居民推荐量 400μg/天
+  const targetCa = 800;     // 钙：中国居民推荐量 800mg/天
+  const targetVk = 80;      // 维生素K：推荐量 80μg/天
 
   document.getElementById('r-bmr').textContent = bmr;
   document.getElementById('r-tdee').textContent = tdee;
@@ -443,10 +457,19 @@ function calculate() {
     tipEl.innerHTML = '增肌模式：目标热量 = TDEE × 110%（每日盈余约 ' + (targetCal - tdee) + ' kcal），配合力量训练可促进肌肉合成。';
   }
 
-  const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, targetVC, ratioStr);
+  const meals = solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, targetVC, targetFolate, targetCa, targetVk, ratioStr);
   const actualVC = +(meals.reduce((s, m) => s + m.totalVC, 0).toFixed(0));
+  const actualFolate = +(meals.reduce((s, m) => s + m.totalFolate, 0).toFixed(0));
+  const actualCa = +(meals.reduce((s, m) => s + m.totalCalcium, 0).toFixed(0));
+  const actualVk = +(meals.reduce((s, m) => s + m.totalVk, 0).toFixed(0));
   document.getElementById('r-vc-actual').textContent = actualVC;
   document.getElementById('r-vc-actual').style.color = actualVC >= 60 ? '#639922' : '#a32d2d';
+  document.getElementById('r-folate-actual').textContent = actualFolate;
+  document.getElementById('r-folate-actual').style.color = actualFolate >= 200 ? '#639922' : '#a32d2d';
+  document.getElementById('r-ca-actual').textContent = actualCa;
+  document.getElementById('r-ca-actual').style.color = actualCa >= 500 ? '#639922' : '#a32d2d';
+  document.getElementById('r-vk-actual').textContent = actualVk;
+  document.getElementById('r-vk-actual').style.color = actualVk >= 40 ? '#639922' : '#a32d2d';
   renderMeals(meals);
 
   // === 跨餐重复检测与警告 ===
@@ -473,7 +496,7 @@ function calculate() {
   }
 
   renderCharts(meals, targetCal, targetPro, targetFat, targetCarb);
-  renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, targetVC, wt);
+  renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, targetVC, targetFolate, targetCa, targetVk, wt);
 
   document.getElementById('result-area').classList.remove('hidden');
   document.getElementById('result-area').scrollIntoView({behavior:'smooth'});
@@ -516,7 +539,7 @@ function clampQty(food, rawQty, maxSingleCal) {
   return Math.max(0, qty);
 }
 
-function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, mealName, usedFoods = {}) {
+function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, folateGoal, caGoal, vkGoal, mealName, usedFoods = {}) {
   if (foodList.length < MIN_MEAL_FOODS) {
     // fallback: 食物太少，直接全用
     foodList = [...foodList];
@@ -627,7 +650,10 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
         itemPro: +(p.food.pro * qty).toFixed(1),
         itemFat: +(p.food.fat * qty).toFixed(1),
         itemCarb: +(p.food.carb * qty).toFixed(1),
-        itemVC: +((p.food.vc || 0) * qty).toFixed(1)
+        itemVC: +((p.food.vc || 0) * qty).toFixed(1),
+        itemFolate: +(((p.food.folate || 0) * qty).toFixed(0)),
+        itemCalcium: +(((p.food.calcium || 0) * qty).toFixed(0)),
+        itemVk: +(((p.food.vk || 0) * qty).toFixed(1))
       };
     }).filter(p => p.qty > 0);
 
@@ -638,6 +664,9 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
     const totalP = finalPlan.reduce((s, i) => s + i.itemPro, 0);
     const totalCarb = finalPlan.reduce((s, i) => s + i.itemCarb, 0);
     const totalVC = finalPlan.reduce((s, i) => s + i.itemVC, 0);
+    const totalFolate = finalPlan.reduce((s, i) => s + i.itemFolate, 0);
+    const totalCalcium = finalPlan.reduce((s, i) => s + i.itemCalcium, 0);
+    const totalVk = finalPlan.reduce((s, i) => s + i.itemVk, 0);
     const cats = new Set(finalPlan.map(i => i.cat));
     const hasProtein = cats.has('protein');
     const hasCarb = cats.has('carb');
@@ -654,6 +683,15 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
     // VC 奖励：达标给大分，不达标按比例给分
     const vcBonus = vcGoal > 0 ? Math.min(totalVC / vcGoal, 1.2) * 20 : 0;
 
+    // 叶酸奖励（日推荐 400μg）
+    const folateBonus = folateGoal > 0 ? Math.min(totalFolate / folateGoal, 1.2) * 10 : 0;
+
+    // 钙奖励（日推荐 800mg）
+    const caBonus = caGoal > 0 ? Math.min(totalCalcium / caGoal, 1.2) * 10 : 0;
+
+    // 维生素K奖励（日推荐 80μg）
+    const vkBonus = vkGoal > 0 ? Math.min(totalVk / vkGoal, 1.2) * 10 : 0;
+
     // 跨餐惩罚：已在前面餐次用过的食物，当前餐再用要扣分
     // 正常情况下 usedFoods 中的食物已被 Step1 硬排除，此惩罚针对 fallback 兜底场景
     let crossMealPenalty = 0;
@@ -667,7 +705,7 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
     }
 
     const score = mandatoryBonus
-                + vcBonus
+                + vcBonus + folateBonus + caBonus + vkBonus
                 - Math.abs(totalC - calGoal) * 1.2
                 - Math.abs(totalP - proGoal) * 3
                 - Math.abs(totalCarb - carbGoal) * 2
@@ -687,11 +725,14 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, meal
   const totalCarb = +bestPlan.reduce((s, i) => s + i.itemCarb, 0).toFixed(1);
   const totalFiber = +bestPlan.reduce((s, i) => s + (i.fiber || 0) * i.qty, 0).toFixed(1);
   const totalVC = +bestPlan.reduce((s, i) => s + i.itemVC, 0).toFixed(0);
+  const totalFolate = +bestPlan.reduce((s, i) => s + i.itemFolate, 0).toFixed(0);
+  const totalCalcium = +bestPlan.reduce((s, i) => s + i.itemCalcium, 0).toFixed(0);
+  const totalVk = +bestPlan.reduce((s, i) => s + i.itemVk, 0).toFixed(0);
 
-  return { name: mealName, items: bestPlan, totalCal, totalPro, totalFat, totalCarb, totalFiber, totalVC };
+  return { name: mealName, items: bestPlan, totalCal, totalPro, totalFat, totalCarb, totalFiber, totalVC, totalFolate, totalCalcium, totalVk };
 }
 
-function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, targetVC, ratios) {
+function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, targetCarb, targetVC, targetFolate, targetCa, targetVk, ratios) {
   const bCal = Math.round(targetCal * ratios[0]);
   const lCal = Math.round(targetCal * ratios[1]);
   const dCal = targetCal - bCal - lCal;
@@ -704,23 +745,32 @@ function solveMealsTD(bFoods, lFoods, dFoods, targetCal, targetPro, targetFat, t
   const bVC = Math.round(targetVC * ratios[0]);
   const lVC = Math.round(targetVC * ratios[1]);
   const dVC = targetVC - bVC - lVC;
+  const bFolate = Math.round(targetFolate * ratios[0]);
+  const lFolate = Math.round(targetFolate * ratios[1]);
+  const dFolate = targetFolate - bFolate - lFolate;
+  const bCa = Math.round(targetCa * ratios[0]);
+  const lCa = Math.round(targetCa * ratios[1]);
+  const dCa = targetCa - bCa - lCa;
+  const bVk = Math.round(targetVk * ratios[0]);
+  const lVk = Math.round(targetVk * ratios[1]);
+  const dVk = targetVk - bVk - lVk;
 
   // === 跨餐食物追踪：顺序求解，同一食物最多出现在 1 餐中 ===
   // 硬排除 > 评分惩罚：已被前面餐次用过的食物直接从候选池移除（Step1），
   // 仅在该餐候选食物不足 MIN_MEAL_FOODS 时才兜底放回。
   const usedFoods = {};  // { foodId: true } — 前面餐次已用过的食物集合
 
-  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, bVC, '早餐', usedFoods);
+  const breakfast = solveMealTD(bFoods, bCal, bPro, targetFat * ratios[0], bCarb, bVC, bFolate, bCa, bVk, '早餐', usedFoods);
   for (const item of breakfast.items) {
     usedFoods[item.id] = true;
   }
 
-  const lunch = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, lVC, '午餐', usedFoods);
+  const lunch = solveMealTD(lFoods, lCal, lPro, targetFat * ratios[1], lCarb, lVC, lFolate, lCa, lVk, '午餐', usedFoods);
   for (const item of lunch.items) {
     usedFoods[item.id] = true;
   }
 
-  const dinner = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, dVC, '晚餐', usedFoods);
+  const dinner = solveMealTD(dFoods, dCal, dPro, targetFat * ratios[2], dCarb, dVC, dFolate, dCa, dVk, '晚餐', usedFoods);
 
   return [breakfast, lunch, dinner];
 }
@@ -744,7 +794,7 @@ function renderMeals(meals) {
     }).join('');
     div.innerHTML = `
       <div class="meal-title"><span class="dot ${dotClass[mi]}"></span>${meal.name}
-        <span style="font-size:12px;color:#888780;font-weight:400">共 ${meal.totalCal} kcal &nbsp;|&nbsp; 蛋白 ${meal.totalPro}g &nbsp;|&nbsp; 脂肪 ${meal.totalFat}g &nbsp;|&nbsp; 碳水 ${meal.totalCarb}g &nbsp;|&nbsp; 纤维 ${meal.totalFiber}g &nbsp;|&nbsp; VC ${meal.totalVC}mg</span>
+        <span style="font-size:12px;color:#888780;font-weight:400">共 ${meal.totalCal} kcal &nbsp;|&nbsp; 蛋白 ${meal.totalPro}g &nbsp;|&nbsp; 脂肪 ${meal.totalFat}g &nbsp;|&nbsp; 碳水 ${meal.totalCarb}g &nbsp;|&nbsp; 纤维 ${meal.totalFiber}g &nbsp;|&nbsp; VC ${meal.totalVC}mg &nbsp;|&nbsp; 叶酸 ${meal.totalFolate}μg &nbsp;|&nbsp; 钙 ${meal.totalCalcium}mg</span>
       </div>
       ${rows}`;
     cont.appendChild(div);
@@ -803,13 +853,16 @@ function renderCharts(meals, targetCal, targetPro, targetFat, targetCarb) {
   });
 }
 
-function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, targetVC, wt) {
+function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb, targetVC, targetFolate, targetCa, targetVk, wt) {
   const totalCal = meals.reduce((s,m) => s + m.totalCal, 0);
   const totalPro = meals.reduce((s,m) => s + m.totalPro, 0);
   const totalFat = meals.reduce((s,m) => s + m.totalFat, 0);
   const totalCarb = meals.reduce((s,m) => s + m.totalCarb, 0);
   const totalFiber = meals.reduce((s,m) => s + m.totalFiber, 0);
   const totalVC = meals.reduce((s,m) => s + m.totalVC, 0);
+  const totalFolate = meals.reduce((s,m) => s + m.totalFolate, 0);
+  const totalCalcium = meals.reduce((s,m) => s + m.totalCalcium, 0);
+  const totalVk = meals.reduce((s,m) => s + m.totalVk, 0);
 
   const checks = [
     {name:'总热量', val: totalCal, min: targetCal*0.9, max: targetCal*1.1, unit:'kcal', target: targetCal},
@@ -818,6 +871,9 @@ function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb
     {name:'碳水', val: totalCarb, min: 50, max: targetCal*0.6/4, unit:'g', target: targetCarb},
     {name:'膳食纤维', val: totalFiber, min: 14, max: 50, unit:'g', target: 25},
     {name:'维生素C', val: totalVC, min: 60, max: 1000, unit:'mg', target: targetVC},
+    {name:'叶酸', val: totalFolate, min: 200, max: 1000, unit:'μg', target: targetFolate},
+    {name:'钙', val: totalCalcium, min: 500, max: 1500, unit:'mg', target: targetCa},
+    {name:'维生素K', val: totalVk, min: 40, max: 500, unit:'μg', target: targetVk},
   ];
 
   const container = document.getElementById('nutrition-check');
@@ -844,6 +900,9 @@ function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb
   if (totalFiber < 14) warnings.push('膳食纤维偏低，建议多选西兰花、菠菜、燕麦等富含纤维的食物。');
   if (totalFat < targetCal * 0.18 / 9) warnings.push('脂肪摄入过低，可能影响脂溶性维生素吸收，建议适当添加牛油果或鸡蛋。');
   if (totalVC < 60) warnings.push('维生素C摄入不足（< 60mg），建议增加西兰花、芥蓝、草莓、荔枝等高VC食物。');
+  if (totalFolate < 200) warnings.push('叶酸摄入不足（< 200μg），建议增加菠菜、芥蓝、西兰花、燕麦、牛油果等高叶酸食物。');
+  if (totalCalcium < 500) warnings.push('钙摄入不足（< 500mg），建议增加牛奶、豆腐、希腊酸奶、海带、菜心等高钙食物。');
+  if (totalVk < 40) warnings.push('维生素K摄入不足（< 40μg），建议增加菠菜、芥蓝、西兰花、广式菜心等高VK绿叶菜。');
 
   if (warnings.length > 0) {
     html += '<div class="warn-box"><strong>营养警告</strong><ul style="margin-top:6px;padding-left:16px">' +
