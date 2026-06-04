@@ -873,24 +873,26 @@ function renderNutritionCheck(meals, targetCal, targetPro, targetFat, targetCarb
     {name:'维生素C', val: totalVC, min: 60, max: 1000, unit:'mg', target: targetVC},
     {name:'叶酸', val: totalFolate, min: 200, max: 1000, unit:'μg', target: targetFolate},
     {name:'钙', val: totalCalcium, min: 500, max: 1500, unit:'mg', target: targetCa},
-    {name:'维生素K', val: totalVk, min: 40, max: 99999, unit:'μg', target: targetVk},
+    {name:'维生素K', val: totalVk, min: 40, max: null, unit:'μg', target: targetVk, note:'食物来源无上限，仅服用华法林者需限制'},
   ];
 
   const container = document.getElementById('nutrition-check');
   let html = '';
   checks.forEach(c => {
-    const pct = Math.min(100, Math.round((c.val / c.target) * 100));
-    const ok = c.val >= c.min && c.val <= c.max;
+    const hasMax = c.max !== null && c.max !== undefined;
+    const pct = hasMax ? Math.min(100, Math.round((c.val / c.target) * 100)) : Math.min(100, Math.round((c.val / (c.min || c.target)) * 100));
+    const ok = c.val >= c.min && (!hasMax || c.val <= c.max);
     const color = ok ? '#639922' : (c.val < c.min ? '#ba7517' : '#a32d2d');
     const fillColor = ok ? '#97c459' : (c.val < c.min ? '#ef9f27' : '#e24b4a');
     const status = ok ? '✓ 达标' : (c.val < c.min ? '↑ 偏低' : '↓ 偏高');
+    const rangeStr = hasMax ? `${+c.min.toFixed(0)} – ${+c.max.toFixed(0)} ${c.unit}` : `≥ ${+c.min.toFixed(0)} ${c.unit}`;
     html += `<div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:500">${c.name}</span>
+        <span style="font-weight:500">${c.name}${c.note ? '<span style="font-size:11px;color:#888780;font-weight:400;margin-left:6px">（${c.note}）</span>' : ''}</span>
         <span style="font-size:12px;color:${color}">${status} &nbsp; ${+c.val.toFixed(1)} / ${c.target} ${c.unit}</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div></div>
-      <div style="font-size:11px;color:#888780;margin-top:2px">建议范围：${+c.min.toFixed(0)} – ${+c.max.toFixed(0)} ${c.unit}</div>
+      <div style="font-size:11px;color:#888780;margin-top:2px">建议范围：${rangeStr}</div>
     </div>`;
   });
 
