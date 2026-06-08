@@ -313,6 +313,8 @@ const FOODS = [
   {id:"enoki",  name:"金针菇",     icon:"🍄", unit:"g",   cal:0.26, pro:0.027,fat:0.003,carb:0.035,fiber:0.027,vc:0.02, gi:0, folate:0.20,calcium:0.01,vk:0,   min:0, max:200, cat:"veggie"},
   {id:"pumpkin",name:"南瓜",       icon:"🎃", unit:"g",   cal:0.22, pro:0.01, fat:0.001,carb:0.05, fiber:0.01, vc:0.09, gi:65, folate:0.12,calcium:0.21,vk:0.01,min:0, max:300, cat:"veggie"},
   {id:"daikon", name:"白萝卜",     icon:"🥕", unit:"g",   cal:0.18, pro:0.006,fat:0.001,carb:0.041,fiber:0.016,vc:0.22, gi:0,  folate:0.28,calcium:0.27,vk:0.003,min:0, max:300, cat:"veggie"},
+  {id:"cucumber",name:"黄瓜",     icon:"🥒", unit:"g",   cal:0.16, pro:0.008,fat:0.001,carb:0.03, fiber:0.005,vc:0.09, gi:0,  folate:0.07,calcium:0.16,vk:0.076,min:0, max:300, cat:"veggie"},
+  {id:"lettuce",name:"生菜",      icon:"🥬", unit:"g",   cal:0.13, pro:0.013,fat:0.002,carb:0.019,fiber:0.013,vc:0.13, gi:0,  folate:0.73,calcium:0.36,vk:1.26, min:0, max:200, cat:"veggie"},
   {id:"carrot", name:"胡萝卜",     icon:"🥕", unit:"g",   cal:0.41, pro:0.009,fat:0.002,carb:0.096,fiber:0.028,vc:0.06, gi:16, folate:0.19,calcium:0.33,vk:0.132,min:0, max:300, cat:"veggie"},
 
   // === 碳水源（续） ===
@@ -327,6 +329,7 @@ const FOODS = [
   {id:"avocado",name:"牛油果",     icon:"🥑", unit:"g",   cal:1.6,  pro:0.02, fat:0.146,carb:0.087,fiber:0.067,vc:0.10, gi:0, folate:0.81,calcium:0.13,vk:0.21,min:0, max:150, cat:"fat"},
   {id:"dumplin",name:"饺子",       icon:"🥟", unit:"个",  cal:55,   pro:3,    fat:2,   carb:7,   fiber:0.5, vc:0,    gi:50, folate:18,  calcium:30,  vk:3,   min:0, max:10,  cat:"mixed"},
   {id:"baopork",name:"猪肉包子",   icon:"🥟", unit:"个",  cal:190,  pro:7,    fat:5,   carb:26,  fiber:1,   vc:0,    gi:66, folate:20,  calcium:25,  vk:3,   min:0, max:4,   cat:"mixed"},
+  {id:"baoveg", name:"青菜包子",   icon:"🥟", unit:"个",  cal:150,  pro:5,    fat:3,   carb:24,  fiber:2,   vc:5,    gi:55, folate:35,  calcium:60,  vk:25,  min:0, max:4,   cat:"mixed"},
   {id:"dessert",name:"甜品",       icon:"🍰", unit:"g",   cal:2.5,  pro:0.03, fat:0.11, carb:0.36, fiber:0.003,vc:0,  gi:70, folate:0.02,calcium:0.20,vk:0.01,min:0, max:80,  cat:"treat"},
 ];
 
@@ -338,16 +341,16 @@ let activeTab = 'b';
 
 const PRESETS = {
   b: {
-    light:  ['egg','milk','bread','banana','yogurt','avocado','berry','strawb','scorn','mantou','porridg','millet','baopork'],
-    quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple','mantou','porridg','baopork'],
+    light:  ['egg','milk','bread','banana','yogurt','avocado','berry','strawb','scorn','mantou','porridg','millet','baopork','baoveg','cucumber','lettuce'],
+    quick:  ['egg','milk','bread','dumplin','oat','yogurt','tomato','apple','mantou','porridg','baopork','baoveg','cucumber'],
   },
   l: {
-    highpro:['chicken','beef','salmon','shrimp','pork','grouper','clam','razor','broc','tofu','rice','potato','pumpkin','daikon','carrot','baopork'],
-    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn','potato','pumpkin','daikon','carrot','baopork'],
+    highpro:['chicken','beef','salmon','shrimp','pork','grouper','clam','razor','broc','tofu','rice','potato','pumpkin','daikon','carrot','cucumber','lettuce','baopork'],
+    balanced:['rice','noodle','chicken','chickth','tofu','broc','spinach','tomato','choysum','kailan','scorn','potato','pumpkin','daikon','carrot','cucumber','lettuce','baopork'],
   },
   d: {
-    lowcarb:['chicken','salmon','shrimp','beef','tuna','grouper','clam','razor','broc','spinach','tofu','tomato','eggplant','pumpkin','daikon','carrot'],
-    light:  ['tofu','broc','spinach','tomato','sweet','scorn','egg','shrimp','okra','kelp','choysum','potato','pumpkin','daikon','carrot'],
+    lowcarb:['chicken','salmon','shrimp','beef','tuna','grouper','clam','razor','broc','spinach','tofu','tomato','eggplant','pumpkin','daikon','carrot','cucumber','lettuce'],
+    light:  ['tofu','broc','spinach','tomato','sweet','scorn','egg','shrimp','okra','kelp','choysum','potato','pumpkin','daikon','carrot','cucumber','lettuce'],
   }
 };
 
