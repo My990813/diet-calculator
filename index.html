@@ -299,23 +299,23 @@ const FOODS = [
   {id:"berry",  name:"蓝莓",       icon:"🫐", unit:"g",   cal:0.57, pro:0.007,fat:0.003,carb:0.145,fiber:0.024,vc:0.097,gi:53, folate:0.06,calcium:0.06,vk:0.19,min:0, max:200, cat:"carb"},
   {id:"strawb", name:"草莓",       icon:"🍓", unit:"g",   cal:0.32, pro:0.007,fat:0.003,carb:0.077,fiber:0.02, vc:0.47, gi:40, folate:0.24,calcium:0.16,vk:0.02,min:0, max:300, cat:"carb"},
 
-  // === 蔬菜 ===
-  {id:"broc",   name:"西兰花",     icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,vc:0.56, gi:0, folate:0.63,calcium:0.47,vk:1.02,min:0, max:300, cat:"veggie"},
-  {id:"spinach",name:"菠菜",       icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,vc:0.28, gi:0, folate:1.94,calcium:0.99,vk:4.83,min:0, max:200, cat:"veggie"},
-  {id:"tomato", name:"西红柿",     icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,vc:0.14, gi:0, folate:0.15,calcium:0.10,vk:0.08,min:0, max:200, cat:"veggie"},
-  {id:"shiitake",name:"香菇",     icon:"🍄", unit:"g",   cal:0.19, pro:0.022,fat:0.003,carb:0.03, fiber:0.025,vc:0.01, gi:0, folate:0.25,calcium:0.02,vk:0,   min:0, max:200, cat:"veggie"},
-  {id:"okra",   name:"秋葵",       icon:"🫛", unit:"g",   cal:0.33, pro:0.019,fat:0.002,carb:0.075,fiber:0.032,vc:0.21, gi:0, folate:0.60,calcium:0.82,vk:0.31,min:0, max:200, cat:"veggie"},
-  {id:"eggplant",name:"茄子",     icon:"🍆", unit:"g",   cal:0.23, pro:0.01, fat:0.002,carb:0.049,fiber:0.017,vc:0.03, gi:0, folate:0.14,calcium:0.09,vk:0.04,min:0, max:300, cat:"veggie"},
-  {id:"kailan", name:"芥蓝",       icon:"🥬", unit:"g",   cal:0.19, pro:0.028,fat:0.004,carb:0.01, fiber:0.016,vc:0.76, gi:0, folate:1.00,calcium:1.10,vk:3.50,min:0, max:250, cat:"veggie"},
-  {id:"choysum",name:"广式菜心",   icon:"🥬", unit:"g",   cal:0.15, pro:0.015,fat:0.002,carb:0.015,fiber:0.008,vc:0.45, gi:0, folate:0.55,calcium:1.05,vk:2.50,min:0, max:250, cat:"veggie"},
-  {id:"fungus", name:"黑木耳",     icon:"🪸", unit:"g",   cal:0.21, pro:0.015,fat:0.002,carb:0.035,fiber:0.026,vc:0.01, gi:0, folate:0.30,calcium:0.57,vk:0,   min:0, max:100, cat:"veggie"},
-  {id:"kelp",   name:"海带",       icon:"🫧", unit:"g",   cal:0.12, pro:0.012,fat:0.001,carb:0.017,fiber:0.005,vc:0,   gi:0, folate:0.35,calcium:1.50,vk:0.30,min:0, max:150, cat:"veggie"},
-  {id:"enoki",  name:"金针菇",     icon:"🍄", unit:"g",   cal:0.26, pro:0.027,fat:0.003,carb:0.035,fiber:0.027,vc:0.02, gi:0, folate:0.20,calcium:0.01,vk:0,   min:0, max:200, cat:"veggie"},
-  {id:"pumpkin",name:"南瓜",       icon:"🎃", unit:"g",   cal:0.22, pro:0.01, fat:0.001,carb:0.05, fiber:0.01, vc:0.09, gi:65, folate:0.12,calcium:0.21,vk:0.01,min:0, max:300, cat:"veggie"},
-  {id:"daikon", name:"白萝卜",     icon:"🥕", unit:"g",   cal:0.18, pro:0.006,fat:0.001,carb:0.041,fiber:0.016,vc:0.22, gi:0,  folate:0.28,calcium:0.27,vk:0.003,min:0, max:300, cat:"veggie"},
-  {id:"cucumber",name:"黄瓜",     icon:"🥒", unit:"g",   cal:0.16, pro:0.008,fat:0.001,carb:0.03, fiber:0.005,vc:0.09, gi:0,  folate:0.07,calcium:0.16,vk:0.076,min:0, max:300, cat:"veggie"},
-  {id:"lettuce",name:"生菜",      icon:"🥬", unit:"g",   cal:0.13, pro:0.013,fat:0.002,carb:0.019,fiber:0.013,vc:0.13, gi:0,  folate:0.73,calcium:0.36,vk:1.26, min:0, max:200, cat:"veggie"},
-  {id:"carrot", name:"胡萝卜",     icon:"🥕", unit:"g",   cal:0.41, pro:0.009,fat:0.002,carb:0.096,fiber:0.028,vc:0.06, gi:16, folate:0.19,calcium:0.33,vk:0.132,min:0, max:300, cat:"veggie"},
+  // === 蔬菜（单品上限100g，鼓励多样性） ===
+  {id:"broc",   name:"西兰花",     icon:"🥦", unit:"g",   cal:0.34, pro:0.028,fat:0.004,carb:0.07, fiber:0.026,vc:0.56, gi:0, folate:0.63,calcium:0.47,vk:1.02,min:0, max:100, cat:"veggie"},
+  {id:"spinach",name:"菠菜",       icon:"🌿", unit:"g",   cal:0.23, pro:0.029,fat:0.004,carb:0.036,fiber:0.026,vc:0.28, gi:0, folate:1.94,calcium:0.99,vk:4.83,min:0, max:100, cat:"veggie"},
+  {id:"tomato", name:"西红柿",     icon:"🍅", unit:"g",   cal:0.18, pro:0.009,fat:0.002,carb:0.039,fiber:0.012,vc:0.14, gi:0, folate:0.15,calcium:0.10,vk:0.08,min:0, max:150, cat:"veggie"},
+  {id:"shiitake",name:"香菇",     icon:"🍄", unit:"g",   cal:0.19, pro:0.022,fat:0.003,carb:0.03, fiber:0.025,vc:0.01, gi:0, folate:0.25,calcium:0.02,vk:0,   min:0, max:100, cat:"veggie"},
+  {id:"okra",   name:"秋葵",       icon:"🫛", unit:"g",   cal:0.33, pro:0.019,fat:0.002,carb:0.075,fiber:0.032,vc:0.21, gi:0, folate:0.60,calcium:0.82,vk:0.31,min:0, max:100, cat:"veggie"},
+  {id:"eggplant",name:"茄子",     icon:"🍆", unit:"g",   cal:0.23, pro:0.01, fat:0.002,carb:0.049,fiber:0.017,vc:0.03, gi:0, folate:0.14,calcium:0.09,vk:0.04,min:0, max:150, cat:"veggie"},
+  {id:"kailan", name:"芥蓝",       icon:"🥬", unit:"g",   cal:0.19, pro:0.028,fat:0.004,carb:0.01, fiber:0.016,vc:0.76, gi:0, folate:1.00,calcium:1.10,vk:3.50,min:0, max:100, cat:"veggie"},
+  {id:"choysum",name:"广式菜心",   icon:"🥬", unit:"g",   cal:0.15, pro:0.015,fat:0.002,carb:0.015,fiber:0.008,vc:0.45, gi:0, folate:0.55,calcium:1.05,vk:2.50,min:0, max:100, cat:"veggie"},
+  {id:"fungus", name:"黑木耳",     icon:"🪸", unit:"g",   cal:0.21, pro:0.015,fat:0.002,carb:0.035,fiber:0.026,vc:0.01, gi:0, folate:0.30,calcium:0.57,vk:0,   min:0, max:80,  cat:"veggie"},
+  {id:"kelp",   name:"海带",       icon:"🫧", unit:"g",   cal:0.12, pro:0.012,fat:0.001,carb:0.017,fiber:0.005,vc:0,   gi:0, folate:0.35,calcium:1.50,vk:0.30,min:0, max:100, cat:"veggie"},
+  {id:"enoki",  name:"金针菇",     icon:"🍄", unit:"g",   cal:0.26, pro:0.027,fat:0.003,carb:0.035,fiber:0.027,vc:0.02, gi:0, folate:0.20,calcium:0.01,vk:0,   min:0, max:100, cat:"veggie"},
+  {id:"pumpkin",name:"南瓜",       icon:"🎃", unit:"g",   cal:0.22, pro:0.01, fat:0.001,carb:0.05, fiber:0.01, vc:0.09, gi:65, folate:0.12,calcium:0.21,vk:0.01,min:0, max:150, cat:"veggie"},
+  {id:"daikon", name:"白萝卜",     icon:"🥕", unit:"g",   cal:0.18, pro:0.006,fat:0.001,carb:0.041,fiber:0.016,vc:0.22, gi:0,  folate:0.28,calcium:0.27,vk:0.003,min:0, max:150, cat:"veggie"},
+  {id:"cucumber",name:"黄瓜",     icon:"🥒", unit:"g",   cal:0.16, pro:0.008,fat:0.001,carb:0.03, fiber:0.005,vc:0.09, gi:0,  folate:0.07,calcium:0.16,vk:0.076,min:0, max:150, cat:"veggie"},
+  {id:"lettuce",name:"生菜",      icon:"🥬", unit:"g",   cal:0.13, pro:0.013,fat:0.002,carb:0.019,fiber:0.013,vc:0.13, gi:0,  folate:0.73,calcium:0.36,vk:1.26, min:0, max:100, cat:"veggie"},
+  {id:"carrot", name:"胡萝卜",     icon:"🥕", unit:"g",   cal:0.41, pro:0.009,fat:0.002,carb:0.096,fiber:0.028,vc:0.06, gi:16, folate:0.19,calcium:0.33,vk:0.132,min:0, max:150, cat:"veggie"},
 
   // === 碳水源（续） ===
   {id:"potato", name:"土豆",       icon:"🥔", unit:"g",   cal:0.81, pro:0.02, fat:0.001,carb:0.18, fiber:0.01, vc:0.20, gi:62, folate:0.16,calcium:0.12,vk:0.02,min:0, max:300, cat:"carb"},
@@ -680,10 +680,13 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, fola
     // 核心：缺蛋白质/碳水源/蔬菜 → 大幅扣分
     const mandatoryBonus = (hasProtein ? 15 : -50) + (hasCarb ? 15 : -50) + (hasVeggie ? 10 : -30);
 
-    // 同类超过1个 → 扣分（比之前强得多）
+    // 同类超过1个 → 扣分（蔬菜类豁免，鼓励多种蔬菜搭配）
     const catCounts = {};
     finalPlan.forEach(i => { catCounts[i.cat] = (catCounts[i.cat] || 0) + 1; });
-    const sameCatPenalty = Object.values(catCounts).reduce((s, c) => s + (c > 1 ? (c - 1) * 8 : 0), 0);
+    const sameCatPenalty = Object.entries(catCounts).reduce((s, [cat, c]) => {
+      if (cat === 'veggie') return s;  // 蔬菜多样性不扣分
+      return s + (c > 1 ? (c - 1) * 8 : 0);
+    }, 0);
 
     // VC 奖励：达标给大分，不达标按比例给分
     const vcBonus = vcGoal > 0 ? Math.min(totalVC / vcGoal, 1.2) * 20 : 0;
@@ -709,8 +712,13 @@ function solveMealTD(foodList, calGoal, proGoal, fatGoal, carbGoal, vcGoal, fola
       }
     }
 
+    // 蔬菜多样性奖励：每多一种蔬菜额外加分
+    const veggieCount = catCounts['veggie'] || 0;
+    const veggieBonus = veggieCount > 1 ? (veggieCount - 1) * 6 : 0;
+
     const score = mandatoryBonus
                 + vcBonus + folateBonus + caBonus + vkBonus
+                + veggieBonus
                 - Math.abs(totalC - calGoal) * 1.2
                 - Math.abs(totalP - proGoal) * 3
                 - Math.abs(totalCarb - carbGoal) * 2
